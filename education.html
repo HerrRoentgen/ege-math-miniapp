@@ -821,8 +821,9 @@
                     alert(`Переход к неделе ${weekNumber}: ${weekTitle}`);
                 }
                 
-                // Здесь будет переход к странице недели
-                // window.location.href = `week.html?week=${weekNumber}`;
+                // В education.html, в обработчике клика по неделе:
+const weekNumber = this.dataset.week;
+window.location.href = `week.html?week=${weekNumber}`;
             });
         });
 
