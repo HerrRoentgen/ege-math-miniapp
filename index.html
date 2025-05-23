@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЕГЭ Математика: Путь к 99 баллам</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            line-height: 1.4;
+            padding-bottom: 70px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header .stage {
+            opacity: 0.9;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .header .days-left {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .section {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--tg-theme-hint-color, #e9ecef);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--tg-theme-text-color, #333);
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 8px;
+            height: 8px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .next-lesson {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .lesson-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .lesson-details {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 16px;
+        }
+
+        .start-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-button:hover {
+            background: white;
+            color: #ff6b6b;
+        }
+
+        .collapsible {
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collapse-icon {
+            transition: transform 0.3s ease;
+            font-size: 18px;
+        }
+
+        .collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            margin-top: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .collapsed .collapsible-content {
+            display: none;
+        }
+
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .achievement-icon {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        .achievement-text {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .achievement-desc {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-theme-bg-color, white);
+            border-top: 1px solid var(--tg-theme-hint-color, #e9ecef);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--tg-theme-hint-color, #6c757d);
+            font-size: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: var(--tg-theme-button-color, #667eea);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .homework-banner {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .homework-icon {
+            font-size: 20px;
+            margin-right: 8px;
+            color: #e17055;
+        }
+
+        .homework-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .chart-placeholder {
+            height: 120px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+
+        .filter-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .lesson-item {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .lesson-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .lesson-item.completed {
+            border-left: 4px solid #28a745;
+        }
+
+        .lesson-item.current {
+            border-left: 4px solid #ff6b6b;
+            background: #fff8f8;
+        }
+
+        .lesson-item.future {
+            opacity: 0.7;
+            border-left: 4px solid #6c757d;
+        }
+
+        .lesson-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .lesson-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .lesson-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .lesson-status {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .lesson-score {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .lesson-action-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            float: right;
+        }
+
+        .lesson-action-btn:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .lesson-action-btn.primary {
+            background: #ff6b6b;
+            color: white;
+            border-color: #ff6b6b;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 20px 12px;
+            }
+
+            .lesson-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .lesson-status {
+                align-self: flex-end;
+                margin-top: -20px;
+            }
+
+            .lesson-action-btn {
+                float: none;
+                width: 100%;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок с приветствием -->
+        <div class="header">
+            <h1>👋 Привет, Александр!</h1>
+            <div class="stage">Базовая подготовка</div>
+            <div class="days-left">⏰ До ЕГЭ: 287 дней</div>
+        </div>
+
+        <!-- Текущий прогресс -->
+        <div class="section">
+            <div class="section-title">📊 Твой прогресс</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span>Неделя 15 из 47</span>
+                <span style="font-weight: 600; color: #667eea;">32%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 32%;"></div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number">42</span>
+                    <div class="stat-label">занятий пройдено</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">73</span>
+                    <div class="stat-label">средний балл</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Домашнее задание -->
+        <div class="homework-banner">
+            <div class="homework-icon">📝</div>
+            <div class="homework-text">
+                <strong>Домашнее задание:</strong><br>
+                Решить 5 задач на производные
+            </div>
+        </div>
+
+        <!-- Следующее занятие -->
+        <div class="next-lesson">
+            <div class="lesson-title">📚 Следующее занятие</div>
+            <div class="lesson-details">
+                Геометрический и физический смысл производной<br>
+                Примерное время: 2 часа
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 16px;">
+                <button class="start-button" style="flex: 1;" onclick="startLesson()">Начать занятие</button>
+                <button class="start-button" style="flex: 0 0 auto; padding: 12px;" onclick="showLessonSelector()" title="Выбрать другое занятие">📋</button>
+            </div>
+        </div>
+
+        <!-- Быстрый доступ к занятиям -->
+        <div class="section collapsed" id="lesson-selector-section">
+            <button class="collapsible" onclick="toggleSection('lesson-selector-section')">
+                <span class="section-title">📋 Выбор занятия</span>
+                <span class="collapse-icon">▼</span>
+            </button>
+            <div class="collapsible-content">
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                        <button class="filter-btn active" onclick="filterLessons('all')">Все</button>
+                        <button class="filter-btn" onclick="filterLessons('completed')">Пройденные</button>
+                        <button class="filter-btn" onclick="filterLessons('current')">Текущие</button>
+                        <button class="filter-btn" onclick="filterLessons('future')">Будущие</button>
+                    </div>
+                    
+                    <div id="lessons-list">
+                        <div class="lesson-item completed" data-week="14" data-status="completed">
+                            <div class="lesson-header">
+                                <div>
+                                    <div class="lesson-name">Понятие производной, правила дифференцирования</div>
+                                    <div class="lesson-meta">Неделя 15 • Занятие 1 • 01.09.2025</div>
+                                </div>
+                                <div class="lesson-status">✅</div>
+                            </div>
+                            <div class="lesson-score">Результат: 85/100 • Время: 1ч 45мин</div>
+                            <button class="lesson-action-btn" onclick="repeatLesson(15, 1)">Повторить</button>
+                        </div>
+
+                        <div class="lesson-item completed" data-week="14" data-status="completed">
+                            <div class="lesson-header">
+                                <div>
+                                    <div class="lesson-name">Производные элементарных функций</div>
+                                    <div class="lesson-meta">Неделя 15 • Занятие 2 • 03.09.2025</div>
+                                </div>
+                                <div class="lesson-status">✅</div>
+                            </div>
+                            <div class="lesson-score">Результат: 92/100 • Время: 1ч 32мин</div>
+                            <button class="lesson-action-btn" onclick="repeatLesson(15, 2)">Повторить</button>
+                        </div>
+
+                        <div class="lesson-item current" data-week="15" data-status="current">
+                            <div class="lesson-header">
+                                <div>
+                                    <div class="lesson-name">Геометрический и физический смысл производной</div>
+                                    <div class="lesson-meta">Неделя 15 • Занятие 3 • 06.09.2025</div>
+                                </div>
+                                <div class="lesson-status">🎯</div>
+                            </div>
+                            <div class="lesson-score">Текущее занятие</div>
+                            <button class="lesson-action-btn primary" onclick="startLesson(15, 3)">Начать</button>
+                        </div>
+
+                        <div class="lesson-item future" data-week="16" data-status="future">
+                            <div class="lesson-header">
+                                <div>
+                                    <div class="lesson-name">Исследование функций на монотонность</div>
+                                    <div class="lesson-meta">Неделя 16 • Занятие 1 • 08.09.2025</div>
+                                </div>
+                                <div class="lesson-status">⏳</div>
+                            </div>
+                            <div class="lesson-score">Доступно после текущего занятия</div>
+                            <button class="lesson-action-btn" disabled>Заблокировано</button>
+                        </div>
+
+                        <div class="lesson-item future" data-week="16" data-status="future">
+                            <div class="lesson-header">
+                                <div>
+                                    <div class="lesson-name">Нахождение экстремумов функций</div>
+                                    <div class="lesson-meta">Неделя 16 • Занятие 2 • 10.09.2025</div>
+                                </div>
+                                <div class="lesson-status">⏳</div>
+                            </div>
+                            <div class="lesson-score">Доступно позже</div>
+                            <button class="lesson-action-btn" disabled>Заблокировано</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика (сворачиваемая) -->
+        <div class="section collapsed" id="stats-section">
+            <button class="collapsible" onclick="toggleSection('stats-section')">
+                <span class="section-title">📈 Подробная статистика</span>
+                <span class="collapse-icon">▼</span>
+            </button>
+            <div class="collapsible-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                    <div class="stat-item">
+                        <span class="stat-number">247</span>
+                        <div class="stat-label">решено задач</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">38ч</span>
+                        <div class="stat-label">время обучения</div>
+                    </div>
+                </div>
+                <div class="chart-placeholder">
+                    📊 График прогресса по типам задач
+                </div>
+            </div>
+        </div>
+
+        <!-- Достижения (сворачиваемая) -->
+        <div class="section collapsed" id="achievements-section">
+            <button class="collapsible" onclick="toggleSection('achievements-section')">
+                <span class="section-title">🏆 Достижения</span>
+                <span class="collapse-icon">▼</span>
+            </button>
+            <div class="collapsible-content">
+                <div class="achievement-item">
+                    <div class="achievement-icon">🔥</div>
+                    <div class="achievement-text">
+                        <div class="achievement-title">Стрик: 5 дней подряд</div>
+                        <div class="achievement-desc">Продолжай в том же духе!</div>
+                    </div>
+                </div>
+                <div class="achievement-item">
+                    <div class="achievement-icon">📐</div>
+                    <div class="achievement-text">
+                        <div class="achievement-title">Мастер производных</div>
+                        <div class="achievement-desc">Освоил тему "Производная"</div>
+                    </div>
+                </div>
+                <div class="achievement-item">
+                    <div class="achievement-icon">💯</div>
+                    <div class="achievement-text">
+                        <div class="achievement-title">100 решенных задач</div>
+                        <div class="achievement-desc">Отличная практика!</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Аналитика (сворачиваемая) -->
+        <div class="section collapsed" id="analytics-section">
+            <button class="collapsible" onclick="toggleSection('analytics-section')">
+                <span class="section-title">🎯 Аналитика и рекомендации</span>
+                <span class="collapse-icon">▼</span>
+            </button>
+            <div class="collapsible-content">
+                <div style="margin-bottom: 16px;">
+                    <div style="color: #28a745; font-weight: 600; margin-bottom: 8px;">💪 Сильные стороны:</div>
+                    <div style="font-size: 14px; color: #6c757d;">Алгебра • Производные • Интегралы</div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <div style="color: #dc3545; font-weight: 600; margin-bottom: 8px;">⚠️ Требуют внимания:</div>
+                    <div style="font-size: 14px; color: #6c757d;">Геометрия • Тригонометрия</div>
+                </div>
+                <div style="background: #e3f2fd; padding: 12px; border-radius: 8px;">
+                    <div style="font-weight: 600; color: #1976d2; margin-bottom: 4px;">💡 Рекомендация:</div>
+                    <div style="font-size: 14px;">Повтори основные тригонометрические формулы перед следующей контрольной</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Настройки (сворачиваемая) -->
+        <div class="section collapsed" id="settings-section">
+            <button class="collapsible" onclick="toggleSection('settings-section')">
+                <span class="section-title">⚙️ Настройки</span>
+                <span class="collapse-icon">▼</span>
+            </button>
+            <div class="collapsible-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                    <span>Напоминания о занятиях</span>
+                    <input type="checkbox" checked style="transform: scale(1.2);">
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e9ecef;">
+                    <span>Целевой балл</span>
+                    <span style="color: #667eea; font-weight: 600;">99 баллов</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <span>Занятий в неделю</span>
+                    <span style="color: #667eea; font-weight: 600;">3 занятия</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Нижняя навигация -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <div>Главная</div>
+        </a>
+        <a href="#" class="nav-item" onclick="goToEducation()">
+            <div class="nav-icon">📖</div>
+            <div>Обучение</div>
+        </a>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            
+            // Настройка темы
+            document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
+            document.body.style.color = tg.themeParams.text_color || '#000000';
+        }
+
+        // Функция для переключения сворачиваемых секций
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('collapsed');
+        }
+
+        // Функция для начала занятия
+        function startLesson(week = 15, lesson = 3) {
+            const message = `Переход к занятию: Неделя ${week}, Занятие ${lesson}`;
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.showAlert(message);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Функция для повторения занятия
+        function repeatLesson(week, lesson) {
+            const message = `Повторение: Неделя ${week}, Занятие ${lesson}`;
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.showAlert(message);
+            } else {
+                alert(message);
+            }
+        }
+
+        // Функция для показа селектора занятий
+        function showLessonSelector() {
+            const section = document.getElementById('lesson-selector-section');
+            if (section.classList.contains('collapsed')) {
+                section.classList.remove('collapsed');
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Функция для фильтрации занятий
+        function filterLessons(filter) {
+            // Обновляем активную кнопку
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Фильтруем занятия
+            const lessons = document.querySelectorAll('.lesson-item');
+            lessons.forEach(lesson => {
+                const status = lesson.dataset.status;
+                let show = false;
+
+                switch(filter) {
+                    case 'all':
+                        show = true;
+                        break;
+                    case 'completed':
+                        show = status === 'completed';
+                        break;
+                    case 'current':
+                        show = status === 'current';
+                        break;
+                    case 'future':
+                        show = status === 'future';
+                        break;
+                }
+
+                lesson.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // Функция для перехода к обучению
+        function goToEducation() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.showAlert('Переход к разделу "Обучение"');
+            } else {
+                alert('Переход к разделу "Обучение"');
+            }
+        }
+
+        // Демо: обновление прогресса каждые 3 секунды
+        let progress = 32;
+        setInterval(() => {
+            if (progress < 100) {
+                progress += 1;
+                document.querySelector('.progress-fill').style.width = progress + '%';
+                document.querySelector('.progress-fill').parentElement.previousElementSibling.querySelector('span:last-child').textContent = progress + '%';
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
