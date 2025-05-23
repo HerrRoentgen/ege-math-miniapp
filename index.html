@@ -723,12 +723,8 @@
 
         // Функция для перехода к обучению
         function goToEducation() {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.showAlert('Переход к разделу "Обучение"');
-            } else {
-                alert('Переход к разделу "Обучение"');
-            }
-        }
+    window.location.href = 'education.html';
+}
 
         // Демо: обновление прогресса каждые 3 секунды
         let progress = 32;
