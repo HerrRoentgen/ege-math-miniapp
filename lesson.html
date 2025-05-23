@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урок: Производная - ЕГЭ Математика</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            line-height: 1.4;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 16px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 18px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .lesson-meta {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+            margin-left: 50px;
+        }
+
+        .lesson-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            margin-left: 50px;
+        }
+
+        .lesson-goals {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-left: 50px;
+        }
+
+        .lesson-nav {
+            display: flex;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            border: 1px solid var(--tg-theme-hint-color, #e9ecef);
+        }
+
+        .nav-step {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+        }
+
+        .nav-step.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .nav-step.completed {
+            color: #28a745;
+        }
+
+        .nav-step.locked {
+            color: #6c757d;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        .theory-content {
+            line-height: 1.6;
+        }
+
+        .theory-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 20px 0 12px 0;
+            color: #667eea;
+        }
+
+        .theory-content p {
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .formula-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-size: 16px;
+        }
+
+        .example-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .example-title {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .quiz-question {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .question-text {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .question-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            color: #1976d2;
+        }
+
+        .option.correct {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .option.incorrect {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+
+        .feedback {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #2e7d32;
+        }
+
+        .feedback.incorrect {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+
+        .practice-task {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .task-number {
+            background: #667eea;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .task-text {
+            font-size: 15px;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .task-input {
+            width: 100%;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn.secondary {
+            background: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn.secondary:hover {
+            background: #e9ecef;
+        }
+
+        .btn.success {
+            background: #28a745;
+        }
+
+        .btn.danger {
+            background: #dc3545;
+        }
+
+        .btn:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .hint-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #856404;
+        }
+
+        .solution-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #1976d2;
+        }
+
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 8px;
+            height: 6px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+
+        .results-summary {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--tg-theme-hint-color, #e9ecef);
+            text-align: center;
+        }
+
+        .results-score {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .results-grade {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .results-grade.excellent {
+            color: #28a745;
+        }
+
+        .results-grade.good {
+            color: #ffc107;
+        }
+
+        .results-grade.needs-work {
+            color: #dc3545;
+        }
+
+        .results-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-stat {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-number {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .next-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-card {
+            flex: 1;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+        }
+
+        .action-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .action-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .action-desc {
+            font-size: 11px;
+            color: #6c757d;
+        }
+
+        .fixed-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .fixed-bottom .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+
+            .results-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .next-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Заголовок урока -->
+        <div class="header">
+            <button class="back-button" onclick="goBack()">←</button>
+            <div class="lesson-meta">Неделя 15 • Занятие 3</div>
+            <div class="lesson-title">Геометрический и физический смысл производной</div>
+            <div class="lesson-goals">
+                Цель: научиться применять производную для решения геометрических и физических задач
+            </div>
+        </div>
+
+        <!-- Навигация по этапам урока -->
+        <div class="lesson-nav">
+            <button class="nav-step active" data-step="intro">📋 Введение</button>
+            <button class="nav-step locked" data-step="theory">📖 Теория</button>
+            <button class="nav-step locked" data-step="quiz">🧠 Тест</button>
+            <button class="nav-step locked" data-step="practice">💪 Практика</button>
+            <button class="nav-step locked" data-step="results">📊 Итоги</button>
+        </div>
+
+        <!-- ЭТАП 1: Введение -->
+        <div class="step-content active" data-step="intro">
+            <div class="content-card">
+                <div class="step-title">📋 Начинаем урок</div>
+                
+                <div class="theory-content">
+                    <p><strong>Что изучаем сегодня:</strong></p>
+                    <ul style="margin-left: 20px; margin-bottom: 16px;">
+                        <li>Геометрический смысл производной</li>
+                        <li>Уравнение касательной к графику функции</li>
+                        <li>Физический смысл производной (скорость, ускорение)</li>
+                        <li>Применение в задачах ЕГЭ</li>
+                    </ul>
+                    
+                    <p><strong>Время урока:</strong> примерно 2 часа</p>
+                    <p><strong>Структура:</strong> теория (30 мин) → тест (10 мин) → практика (70 мин) → итоги (10 мин)</p>
+                </div>
+            </div>
+
+            <div class="fixed-bottom">
+                <button class="btn" onclick="startLesson()">Начать изучение</button>
+            </div>
+        </div>
+
+        <!-- ЭТАП 2: Теория -->
+        <div class="step-content" data-step="theory">
+            <div class="content-card">
+                <div class="step-title">📖 Теоретический материал</div>
+                
+                <div class="theory-content">
+                    <h3>Геометрический смысл производной</h3>
+                    <p>Производная функции в точке равна тангенсу угла наклона касательной к графику функции в этой точке.</p>
+                    
+                    <div class="formula-box">
+                        f'(x₀) = tg α = k
+                    </div>
+                    
+                    <p>где k — угловой коэффициент касательной в точке x₀.</p>
+
+                    <h3>Уравнение касательной</h3>
+                    <p>Если к графику функции y = f(x) в точке с абсциссой x₀ проведена касательная, то её уравнение:</p>
+                    
+                    <div class="formula-box">
+                        y = f(x₀) + f'(x₀)(x - x₀)
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">Пример 1</div>
+                        <p>Найти уравнение касательной к графику функции y = x² в точке x₀ = 2.</p>
+                        <p><strong>Решение:</strong></p>
+                        <p>1) f(2) = 2² = 4</p>
+                        <p>2) f'(x) = 2x, f'(2) = 4</p>
+                        <p>3) y = 4 + 4(x - 2) = 4x - 4</p>
+                    </div>
+
+                    <h3>Физический смысл производной</h3>
+                    <p>Если s(t) — закон движения точки, то:</p>
+                    <ul style="margin-left: 20px; margin-bottom: 12px;">
+                        <li><strong>s'(t) = v(t)</strong> — мгновенная скорость</li>
+                        <li><strong>v'(t) = a(t)</strong> — мгновенное ускорение</li>
+                    </ul>
+
+                    <div class="example-box">
+                        <div class="example-title">Пример 2</div>
+                        <p>Точка движется по закону s(t) = 2t³ - 3t² + 1. Найти скорость в момент t = 2.</p>
+                        <p><strong>Решение:</strong></p>
+                        <p>v(t) = s'(t) = 6t² - 6t</p>
+                        <p>v(2) = 6·4 - 6·2 = 24 - 12 = 12</p>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 30%;"></div>
+                </div>
+            </div>
+
+            <div class="fixed-bottom">
+                <button class="btn secondary" onclick="previousStep()">Назад</button>
+                <button class="btn" onclick="nextStep()">Перейти к тесту</button>
+            </div>
+        </div>
+
+        <!-- ЭТАП 3: Тест на понимание -->
+        <div class="step-content" data-step="quiz">
+            <div class="content-card">
+                <div class="step-title">🧠 Тест на понимание</div>
+                
+                <div class="quiz-question" data-question="1">
+                    <div class="question-text">1. Что означает геометрический смысл производной f'(x₀)?</div>
+                    <div class="question-options">
+                        <div class="option" data-answer="wrong">Значение функции в точке x₀</div>
+                        <div class="option" data-answer="correct">Тангенс угла наклона касательной в точке x₀</div>
+                        <div class="option" data-answer="wrong">Площадь под графиком функции</div>
+                        <div class="option" data-answer="wrong">Длину касательной в точке x₀</div>
+                    </div>
+                </div>
+
+                <div class="quiz-question" data-question="2">
+                    <div class="question-text">2. Уравнение касательной к графику y = x³ в точке x₀ = 1:</div>
+                    <div class="question-options">
+                        <div class="option" data-answer="wrong">y = x + 2</div>
+                        <div class="option" data-answer="correct">y = 3x - 2</div>
+                        <div class="option" data-answer="wrong">y = x - 1</div>
+                        <div class="option" data-answer="wrong">y = 3x + 1</div>
+                    </div>
+                </div>
+
+                <div class="quiz-question" data-question="3">
+                    <div class="question-text">3. Если s(t) = 5t² - 2t, то скорость в момент t = 3 равна:</div>
+                    <div class="question-options">
+                        <div class="option" data-answer="wrong">39</div>
+                        <div class="option" data-answer="correct">28</div>
+                        <div class="option" data-answer="wrong">15</div>
+                        <div class="option" data-answer="wrong">10</div>
+                    </div>
+                </div>
+
+                <div id="quiz-score" style="text-align: center; margin-top: 20px; display: none;">
+                    <div style="font-size: 18px; font-weight: 600; color: #667eea;">
+                        Результат: <span id="correct-answers">0</span>/3 правильно
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 50%;"></div>
+                </div>
+            </div>
+
+            <div class="fixed-bottom">
+                <button class="btn secondary" onclick="previousStep()">Назад</button>
+                <button class="btn" id="quiz-next-btn" onclick="nextStep()" disabled>К практике</button>
+            </div>
+        </div>
+
+        <!-- ЭТАП 4: Практические задачи -->
+        <div class="step-content" data-step="practice">
+            <div class="content-card">
+                <div class="step-title">💪 Практические задачи</div>
+                
+                <div class="practice-task" data-task="1">
+                    <div class="task-number">Задача 1</div>
+                    <div class="task-text">
+                        Найдите уравнение касательной к графику функции y = 2x² - 3x + 1 в точке с абсциссой x₀ = 2.
+                    </div>
+                    <input type="text" class="task-input" placeholder="Введите уравнение касательной (например: y = 5x - 3)">
+                    <div class="task-actions">
+                        <button class="btn" onclick="checkAnswer(1)">Проверить</button>
+                        <button class="btn secondary" onclick="showHint(1)">Подсказка</button>
+                        <button class="btn secondary" onclick="showSolution(1)" style="display: none;">Показать решение</button>
+                    </div>
+                </div>
+
+                <div class="practice-task" data-task="2">
+                    <div class="task-number">Задача 2</div>
+                    <div class="task-text">
+                        Тело движется по закону s(t) = t³ - 6t² + 9t + 2. В какой момент времени скорость тела равна нулю?
+                    </div>
+                    <input type="text" class="task-input" placeholder="Введите момент времени t">
+                    <div class="task-actions">
+                        <button class="btn" onclick="checkAnswer(2)">Проверить</button>
+                        <button class="btn secondary" onclick="showHint(2)">Подсказка</button>
+                        <button class="btn secondary" onclick="showSolution(2)" style="display: none;">Показать решение</button>
+                    </div>
+                </div>
+
+                <div class="practice-task" data-task="3">
+                    <div class="task-number">Задача 3</div>
+                    <div class="task-text">
+                        Под каким углом к оси Ox наклонена касательная к графику функции y = x³ - 3x² + 2 в точке x₀ = 1?
+                    </div>
+                    <input type="text" class="task-input" placeholder="Введите угол в градусах">
+                    <div class="task-actions">
+                        <button class="btn" onclick="checkAnswer(3)">Проверить</button>
+                        <button class="btn secondary" onclick="showHint(3)">Подсказка</button>
+                        <button class="btn secondary" onclick="showSolution(3)" style="display: none;">Показать решение</button>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 80%;"></div>
+                </div>
+            </div>
+
+            <div class="fixed-bottom">
+                <button class="btn secondary" onclick="previousStep()">Назад</button>
+                <button class="btn" id="practice-next-btn" onclick="nextStep()">Завершить урок</button>
+            </div>
+        </div>
+
+        <!-- ЭТАП 5: Итоги урока -->
+        <div class="step-content" data-step="results">
+            <div class="results-summary">
+                <div class="results-score" id="final-score">89</div>
+                <div class="results-grade excellent" id="final-grade">Отлично!</div>
+                
+                <div class="results-stats">
+                    <div class="result-stat">
+                        <span class="stat-number" id="quiz-result">3/3</span>
+                        <div class="stat-label">тест</div>
+                    </div>
+                    <div class="result-stat">
+                        <span class="stat-number" id="practice-result">2/3</span>
+                        <div class="stat-label">практика</div>
+                    </div>
+                    <div class="result-stat">
+                        <span class="stat-number" id="time-spent">1ч 45м</span>
+                        <div class="stat-label">время</div>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <div class="content-card">
+                <div class="step-title">📝 Анализ результатов</div>
+                
+                <div id="feedback-content">
+                    <div style="background: #e8f5e8; border-left: 4px solid #4caf50; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                        <strong>✅ Сильные стороны:</strong><br>
+                        Отлично усвоил геометрический смысл производной и умеешь находить уравнения касательных.
+                    </div>
+                    
+                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; border-radius: 4px; margin-bottom: 16px;">
+                        <strong>⚠️ Требует внимания:</strong><br>
+                        Обрати внимание на применение производной в физических задачах.
+                    </div>
+                    
+                    <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 12px; border-radius: 4px;">
+                        <strong>💡 Рекомендации:</strong><br>
+                        Повтори формулы скорости и ускорения. Реши дополнительные задачи на движение.
+                    </div>
+                </div>
+            </div>
+
+            <div class="next-actions">
+                <div class="action-card" onclick="goToHomework()">
+                    <div class="action-icon">📝</div>
+                    <div class="action-title">Домашнее задание</div>
+                    <div class="action-desc">5 задач на закрепление</div>
+                </div>
+                
+                <div class="action-card" onclick="goToNextLesson()">
+                    <div class="action-icon">➡️</div>
+                    <div class="action-title">Следующий урок</div>
+                    <div class="action-desc">Неделя 16, Занятие 1</div>
+                </div>
+                
+                <div class="action-card" onclick="repeatLesson()">
+                    <div class="action-icon">🔄</div>
+                    <div class="action-title">Повторить</div>
+                    <div class="action-desc">Пройти урок заново</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            
+            // Настройка темы
+            document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
+            document.body.style.color = tg.themeParams.text_color || '#000000';
+        }
+
+        // Состояние урока
+        let currentStep = 'intro';
+        let quizScore = 0;
+        let practiceScore = 0;
+        let startTime = Date.now();
+        let completedSteps = new Set(['intro']);
+
+        // Правильные ответы для задач
+        const practiceAnswers = {
+            1: 'y = 5x - 3',  // 2x²-3x+1, x₀=2: f(2)=3, f'(2)=5
+            2: '3',           // t³-6t²+9t+2, v(t)=3t²-12t+9=0 => t=1 или t=3
+            3: '-45'          // x³-3x²+2, x₀=1: f'(1)=-3, arctg(-3)≈-71.57°
+        };
+
+        // Переключение между этапами урока
+        function switchToStep(stepName) {
+            // Скрываем все контенты
+            document.querySelectorAll('.step-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Убираем активный класс с навигации
+            document.querySelectorAll('.nav-step').forEach(nav => {
+                nav.classList.remove('active');
+            });
+            
+            // Показываем нужный контент
+            document.querySelector(`[data-step="${stepName}"]`).classList.add('active');
+            document.querySelector(`.nav-step[data-step="${stepName}"]`).classList.add('active');
+            
+            currentStep = stepName;
+            completedSteps.add(stepName);
+            
+            // Разблокируем следующий этап
+            unlockNextSteps();
+        }
+
+        // Разблокировка следующих этапов
+        function unlockNextSteps() {
+            const steps = ['intro', 'theory', 'quiz', 'practice', 'results'];
+            const currentIndex = steps.indexOf(currentStep);
+            
+            steps.forEach((step, index) => {
+                const navStep = document.querySelector(`.nav-step[data-step="${step}"]`);
+                
+                if (completedSteps.has(step)) {
+                    navStep.classList.add('completed');
+                    navStep.classList.remove('locked');
+                } else if (index <= currentIndex + 1) {
+                    navStep.classList.remove('locked');
+                } else {
+                    navStep.classList.add('locked');
+                }
+            });
+        }
+
+        // Навигация по клику на этапы
+        document.querySelectorAll('.nav-step').forEach(step => {
+            step.addEventListener('click', function() {
+                if (!this.classList.contains('locked')) {
+                    switchToStep(this.dataset.step);
+                }
+            });
+        });
+
+        // Функции навигации
+        function startLesson() {
+            switchToStep('theory');
+        }
+
+        function nextStep() {
+            const steps = ['intro', 'theory', 'quiz', 'practice', 'results'];
+            const currentIndex = steps.indexOf(currentStep);
+            
+            if (currentIndex < steps.length - 1) {
+                const nextStepName = steps[currentIndex + 1];
+                
+                // Проверяем, можно ли перейти к следующему этапу
+                if (currentStep === 'quiz') {
+                    // Проверяем, что пройден тест
+                    if (quizScore < 2) {
+                        alert('Ответьте правильно хотя бы на 2 вопроса из 3');
+                        return;
+                    }
+                }
+                
+                switchToStep(nextStepName);
+                
+                if (nextStepName === 'results') {
+                    calculateFinalResults();
+                }
+            }
+        }
+
+        function previousStep() {
+            const steps = ['intro', 'theory', 'quiz', 'practice', 'results'];
+            const currentIndex = steps.indexOf(currentStep);
+            
+            if (currentIndex > 0) {
+                switchToStep(steps[currentIndex - 1]);
+            }
+        }
+
+        // Обработка квиза
+        document.querySelectorAll('.quiz-question').forEach(question => {
+            const options = question.querySelectorAll('.option');
+            
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Убираем выделение с других опций
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Выделяем выбранную опцию
+                    this.classList.add('selected');
+                    
+                    // Показываем результат
+                    setTimeout(() => {
+                        options.forEach(opt => {
+                            if (opt.dataset.answer === 'correct') {
+                                opt.classList.add('correct');
+                            } else if (opt.classList.contains('selected') && opt.dataset.answer === 'wrong') {
+                                opt.classList.add('incorrect');
+                            }
+                        });
+                        
+                        // Показываем объяснение
+                        if (!question.querySelector('.feedback')) {
+                            const feedback = document.createElement('div');
+                            feedback.className = 'feedback';
+                            
+                            if (this.dataset.answer === 'correct') {
+                                feedback.textContent = '✅ Правильно!';
+                                quizScore++;
+                            } else {
+                                feedback.className += ' incorrect';
+                                feedback.textContent = '❌ Неправильно. Правильный ответ выделен зеленым.';
+                            }
+                            
+                            question.appendChild(feedback);
+                        }
+                        
+                        // Обновляем счетчик
+                        updateQuizScore();
+                    }, 500);
+                });
+            });
+        });
+
+        function updateQuizScore() {
+            const totalQuestions = document.querySelectorAll('.quiz-question').length;
+            const answeredQuestions = document.querySelectorAll('.quiz-question .feedback').length;
+            
+            if (answeredQuestions === totalQuestions) {
+                document.getElementById('quiz-score').style.display = 'block';
+                document.getElementById('correct-answers').textContent = quizScore;
+                
+                if (quizScore >= 2) {
+                    document.getElementById('quiz-next-btn').disabled = false;
+                }
+            }
+        }
+
+        // Обработка практических задач
+        function checkAnswer(taskNumber) {
+            const task = document.querySelector(`[data-task="${taskNumber}"]`);
+            const input = task.querySelector('.task-input');
+            const userAnswer = input.value.trim().toLowerCase();
+            const correctAnswer = practiceAnswers[taskNumber].toLowerCase();
+            
+            // Убираем предыдущие фидбеки
+            const existingFeedback = task.querySelector('.feedback, .hint-box, .solution-box');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
+            const feedback = document.createElement('div');
+            
+            if (userAnswer === correctAnswer || isAnswerClose(userAnswer, correctAnswer)) {
+                feedback.className = 'feedback';
+                feedback.textContent = '✅ Правильно!';
+                practiceScore++;
+                input.style.borderColor = '#4caf50';
+                input.disabled = true;
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '❌ Неправильно. Попробуйте еще раз или воспользуйтесь подсказкой.';
+                input.style.borderColor = '#f44336';
+                
+                // Показываем кнопку решения после 2 неправильных попыток
+                const attemptCount = parseInt(input.dataset.attempts || '0') + 1;
+                input.dataset.attempts = attemptCount;
+                
+                if (attemptCount >= 2) {
+                    task.querySelector('[onclick*="showSolution"]').style.display = 'inline-block';
+                }
+            }
+            
+            task.appendChild(feedback);
+        }
+
+        function isAnswerClose(userAnswer, correctAnswer) {
+            // Простая проверка на близость ответов (для чисел)
+            const userNum = parseFloat(userAnswer);
+            const correctNum = parseFloat(correctAnswer);
+            
+            if (!isNaN(userNum) && !isNaN(correctNum)) {
+                return Math.abs(userNum - correctNum) < 0.1;
+            }
+            
+            return false;
+        }
+
+        function showHint(taskNumber) {
+            const task = document.querySelector(`[data-task="${taskNumber}"]`);
+            
+            // Убираем предыдущие подсказки
+            const existingHint = task.querySelector('.hint-box');
+            if (existingHint) {
+                existingHint.remove();
+                return;
+            }
+            
+            const hints = {
+                1: 'Найдите f(2) и f\'(2), затем используйте формулу y = f(x₀) + f\'(x₀)(x - x₀)',
+                2: 'Найдите производную s\'(t) = v(t) и приравняйте её к нулю',
+                3: 'Найдите f\'(1), затем используйте формулу α = arctg(f\'(x₀))'
+            };
+            
+            const hint = document.createElement('div');
+            hint.className = 'hint-box';
+            hint.innerHTML = `💡 <strong>Подсказка:</strong> ${hints[taskNumber]}`;
+            
+            task.appendChild(hint);
+        }
+
+        function showSolution(taskNumber) {
+            const task = document.querySelector(`[data-task="${taskNumber}"]`);
+            
+            const solutions = {
+                1: `
+                    <strong>Решение:</strong><br>
+                    1) f(x) = 2x² - 3x + 1, f(2) = 8 - 6 + 1 = 3<br>
+                    2) f'(x) = 4x - 3, f'(2) = 8 - 3 = 5<br>
+                    3) y = 3 + 5(x - 2) = 3 + 5x - 10 = 5x - 3
+                `,
+                2: `
+                    <strong>Решение:</strong><br>
+                    1) v(t) = s'(t) = 3t² - 12t + 9<br>
+                    2) v(t) = 0: 3t² - 12t + 9 = 0<br>
+                    3) t² - 4t + 3 = 0, (t-1)(t-3) = 0<br>
+                    4) t = 1 или t = 3
+                `,
+                3: `
+                    <strong>Решение:</strong><br>
+                    1) f'(x) = 3x² - 6x, f'(1) = 3 - 6 = -3<br>
+                    2) tg α = f'(1) = -3<br>
+                    3) α = arctg(-3) ≈ -71.57° ≈ -72°
+                `
+            };
+            
+            const solution = document.createElement('div');
+            solution.className = 'solution-box';
+            solution.innerHTML = `🔍 ${solutions[taskNumber]}`;
+            
+            task.appendChild(solution);
+        }
+
+        // Подсчет финальных результатов
+        function calculateFinalResults() {
+            const totalTime = Math.round((Date.now() - startTime) / 60000); // в минутах
+            const hours = Math.floor(totalTime / 60);
+            const minutes = totalTime % 60;
+            
+            // Подсчет итогового балла
+            const quizPoints = (quizScore / 3) * 40; // 40% за тест
+            const practicePoints = (practiceScore / 3) * 60; // 60% за практику
+            const finalScore = Math.round(quizPoints + practicePoints);
+            
+            // Обновляем результаты
+            document.getElementById('final-score').textContent = finalScore;
+            document.getElementById('quiz-result').textContent = `${quizScore}/3`;
+            document.getElementById('practice-result').textContent = `${practiceScore}/3`;
+            document.getElementById('time-spent').textContent = `${hours}ч ${minutes}м`;
+            
+            // Определяем оценку
+            const gradeElement = document.getElementById('final-grade');
+            if (finalScore >= 85) {
+                gradeElement.textContent = 'Отлично!';
+                gradeElement.className = 'results-grade excellent';
+            } else if (finalScore >= 70) {
+                gradeElement.textContent = 'Хорошо!';
+                gradeElement.className = 'results-grade good';
+            } else {
+                gradeElement.textContent = 'Требуется доработка';
+                gradeElement.className = 'results-grade needs-work';
+            }
+        }
+
+        // Функции переходов
+        function goBack() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const week = urlParams.get('week') || '15';
+            window.location.href = `week.html?week=${week}`;
+        }
+
+        function goToHomework() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.showAlert('Переход к домашнему заданию');
+            } else {
+                alert('Переход к домашнему заданию');
+            }
+        }
+
+        function goToNextLesson() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.showAlert('Переход к следующему уроку');
+            } else {
+                alert('Переход к следующему уроку');
+            }
+        }
+
+        function repeatLesson() {
+            if (confirm('Вы уверены, что хотите пройти урок заново?')) {
+                location.reload();
+            }
+        }
+
+        // Сохранение прогресса в localStorage
+        function saveProgress() {
+            const progress = {
+                currentStep,
+                quizScore,
+                practiceScore,
+                completedSteps: Array.from(completedSteps),
+                startTime
+            };
+            
+            localStorage.setItem('lesson_progress', JSON.stringify(progress));
+        }
+
+        // Загрузка прогресса из localStorage
+        function loadProgress() {
+            const saved = localStorage.getItem('lesson_progress');
+            if (saved) {
+                const progress = JSON.parse(saved);
+                currentStep = progress.currentStep;
+                quizScore = progress.quizScore || 0;
+                practiceScore = progress.practiceScore || 0;
+                completedSteps = new Set(progress.completedSteps || ['intro']);
+                startTime = progress.startTime || Date.now();
+                
+                switchToStep(currentStep);
+            }
+        }
+
+        // Автосохранение прогресса
+        setInterval(saveProgress, 30000); // каждые 30 секунд
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            // loadProgress(); // Раскомментировать для восстановления прогресса
+            unlockNextSteps();
+        });
+
+        // Предотвращение случайного закрытия
+        window.addEventListener('beforeunload', function(e) {
+            if (currentStep !== 'results' && currentStep !== 'intro') {
+                e.preventDefault();
+                e.returnValue = '';
+                return 'Вы уверены, что хотите покинуть урок? Прогресс будет сохранен.';
+            }
+        });
+    </script>
+</body>
+</html>
