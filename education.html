@@ -801,31 +801,23 @@
         }
 
         // Клик по неделе - переход к детальной странице
-        document.querySelectorAll('.week-item').forEach(week => {
-            week.addEventListener('click', function() {
-                if (this.classList.contains('locked')) {
-                    if (window.Telegram && window.Telegram.WebApp) {
-                        window.Telegram.WebApp.showAlert('Эта неделя откроется после завершения предыдущих');
-                    } else {
-                        alert('Эта неделя откроется после завершения предыдущих');
-                    }
-                    return;
-                }
+document.querySelectorAll('.week-item').forEach(week => {
+    week.addEventListener('click', function() {
+        if (this.classList.contains('locked')) {
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.showAlert('Эта неделя откроется после завершения предыдущих');
+            } else {
+                alert('Эта неделя откроется после завершения предыдущих');
+            }
+            return;
+        }
 
-                const weekNumber = this.dataset.week;
-                const weekTitle = this.querySelector('.week-title').textContent;
-                
-                if (window.Telegram && window.Telegram.WebApp) {
-                    window.Telegram.WebApp.showAlert(`Переход к неделе ${weekNumber}: ${weekTitle}`);
-                } else {
-                    alert(`Переход к неделе ${weekNumber}: ${weekTitle}`);
-                }
-                
-                // В education.html, в обработчике клика по неделе:
-const weekNumber = this.dataset.week;
-window.location.href = `week.html?week=${weekNumber}`;
-            });
-        });
+        const weekNumber = this.dataset.week;
+        
+        // Переход к странице недели
+        window.location.href = `week.html?week=${weekNumber}`;
+    });
+});
 
         // Автоматически открываем текущий этап при загрузке
         document.addEventListener('DOMContentLoaded', function() {
