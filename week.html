@@ -663,35 +663,22 @@
             window.location.href = 'education.html';
         }
 
-        // Открытие урока
-        function openLesson(week, lesson) {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.showAlert(`Переход к уроку: Неделя ${week}, Занятие ${lesson}`);
-            } else {
-                alert(`Переход к уроку: Неделя ${week}, Занятие ${lesson}`);
-            }
-            
-            // В будущем: переход к странице урока
-            // window.location.href = `lesson.html?week=${week}&lesson=${lesson}`;
-        }
 
-        // Повторение урока
-        function repeatLesson(week, lesson) {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.showAlert(`Повторение урока: Неделя ${week}, Занятие ${lesson}`);
-            } else {
-                alert(`Повторение урока: Неделя ${week}, Занятие ${lesson}`);
-            }
-        }
 
-        // Продолжение текущего урока
-        function continueLesson(week, lesson) {
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.showAlert(`Продолжение урока: Неделя ${week}, Занятие ${lesson}`);
-            } else {
-                alert(`Продолжение урока: Неделя ${week}, Занятие ${lesson}`);
-            }
-        }
+// Открытие урока
+function openLesson(week, lesson) {
+    window.location.href = `lesson.html?week=${week}&lesson=${lesson}`;
+}
+
+// Повторение урока
+function repeatLesson(week, lesson) {
+    window.location.href = `lesson.html?week=${week}&lesson=${lesson}&mode=repeat`;
+}
+
+// Продолжение текущего урока
+function continueLesson(week, lesson) {
+    window.location.href = `lesson.html?week=${week}&lesson=${lesson}&mode=continue`;
+}
 
         // Динамическое обновление контента в зависимости от недели
         function updateWeekContent() {
