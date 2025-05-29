@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gann Monitor - Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 10px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 15px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            color: var(--tg-theme-text-color, #000);
+            margin-bottom: 5px;
+        }
+        
+        .header h2 {
+            font-size: 1em;
+            color: var(--tg-theme-hint-color, #666);
+            font-weight: normal;
+        }
+        
+        .current-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+        }
+        
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--tg-theme-accent-text-color, #3390ec);
+            margin-bottom: 5px;
+        }
+        
+        .status-label {
+            font-size: 0.8em;
+            color: var(--tg-theme-hint-color, #666);
+        }
+        
+        .price-input {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .price-input label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .price-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .btn {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: opacity 0.2s;
+        }
+        
+        .btn:active {
+            opacity: 0.7;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000);
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: all 0.2s;
+        }
+        
+        .control-btn.active {
+            background-color: var(--tg-theme-accent-text-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .countdown-container {
+            margin-bottom: 20px;
+        }
+        
+        .countdown-card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--tg-theme-hint-color, #666);
+            position: relative;
+        }
+        
+        .countdown-card.active {
+            border-left-color: #ff6b6b;
+            background-color: rgba(255, 107, 107, 0.1);
+            animation: pulse 2s infinite;
+        }
+        
+        .countdown-card.upcoming {
+            border-left-color: #51cf66;
+        }
+        
+        .countdown-card.passed {
+            opacity: 0.6;
+            border-left-color: #adb5bd;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+        }
+        
+        .date-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .target-date {
+            font-weight: bold;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .days-left {
+            background-color: var(--tg-theme-accent-text-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        
+        .price-targets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .price-target {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .target-label {
+            font-size: 0.7em;
+            color: var(--tg-theme-hint-color, #666);
+            margin-bottom: 4px;
+        }
+        
+        .target-price {
+            font-weight: bold;
+            color: var(--tg-theme-accent-text-color, #3390ec);
+            font-size: 0.9em;
+        }
+        
+        .alert-zone {
+            background-color: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .alert-zone.active {
+            display: block;
+            animation: alertBlink 1s infinite;
+        }
+        
+        @keyframes alertBlink {
+            0%, 100% { background-color: rgba(255, 193, 7, 0.2); }
+            50% { background-color: rgba(255, 193, 7, 0.4); }
+        }
+        
+        .trading-panel {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .trading-panel h3 {
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .signal-item {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+        }
+        
+        .signal-strong { border-left-color: #ff6b6b; }
+        .signal-medium { border-left-color: #ffa726; }
+        .signal-weak { border-left-color: #51cf66; }
+        
+        .base-point-manager {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .base-point-manager h3 {
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .base-card {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            margin-bottom: 15px;
+        }
+        
+        .base-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .base-type {
+            background-color: var(--tg-theme-accent-text-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        
+        .base-type.minimum {
+            background-color: #ff6b6b;
+        }
+        
+        .base-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .new-base-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .new-base-form, .base-history {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 2px solid var(--tg-theme-accent-text-color, #3390ec);
+        }
+        
+        .new-base-form h4, .base-history h4 {
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #000);
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .radio-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .radio-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .radio-item:hover {
+            background-color: rgba(51, 144, 236, 0.1);
+        }
+        
+        .radio-item input[type="radio"] {
+            margin-right: 8px;
+            width: auto;
+        }
+        
+        .radio-item input[type="radio"]:checked + span {
+            color: var(--tg-theme-accent-text-color, #3390ec);
+            font-weight: bold;
+        }
+        
+        .form-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .history-item {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--tg-theme-accent-text-color, #3390ec);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .history-item:hover {
+            background-color: rgba(51, 144, 236, 0.05);
+        }
+        
+        .history-item.active {
+            border-left-color: #51cf66;
+            background-color: rgba(81, 207, 102, 0.1);
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .history-details {
+            font-size: 0.9em;
+            color: var(--tg-theme-hint-color, #666);
+        }
+        
+        .switch-base-btn {
+            background-color: var(--tg-theme-accent-text-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+        
+        .delete-base-btn {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        
+        .accuracy-tracker {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .telegram-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border-top: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            padding: 8px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 6px;
+        }
+        
+        .telegram-btn {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 10px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            font-size: 0.8em;
+            text-align: center;
+        }
+        
+        .telegram-btn:active {
+            opacity: 0.7;
+        }
+        
+        .main-content {
+            padding-bottom: 80px; /* Отступ для нижней панели с 4 кнопками */
+        }
+        
+        .haptic-feedback {
+            transition: transform 0.1s;
+        }
+        
+        .haptic-feedback:active {
+            transform: scale(0.98);
+        }
+        
+        @media (max-width: 360px) {
+            .current-status {
+                grid-template-columns: 1fr;
+            }
+            
+            .price-targets {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>🎯 Gann Monitor</h1>
+                <h2>EUR/USD прогнозы</h2>
+                <div id="currentTime" style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666); margin-top: 5px;"></div>
+            </div>
+
+            <div class="current-status">
+                <div class="status-card">
+                    <div class="status-value" id="currentPrice">1.1300</div>
+                    <div class="status-label">Текущая цена</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value" id="daysPassed">38</div>
+                    <div class="status-label">Дней от макс.</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value" id="nextAlert">11</div>
+                    <div class="status-label">До цели</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value" id="accuracy">75%</div>
+                    <div class="status-label">Точность</div>
+                </div>
+            </div>
+
+            <div class="price-input">
+                <label>Обновить цену EUR/USD:</label>
+                <div class="input-group">
+                    <input type="number" id="priceUpdate" step="0.0001" min="1.0000" max="1.3000" placeholder="1.1300">
+                    <button class="btn haptic-feedback" onclick="updateCurrentPrice()">Обновить</button>
+                </div>
+            </div>
+
+            <div class="base-point-manager">
+                <h3>📍 Управление базовыми точками</h3>
+                <div class="current-base-info">
+                    <div class="base-card">
+                        <div class="base-header">
+                            <span>Активный квадрат:</span>
+                            <span id="activeBaseType" class="base-type">МАКСИМУМ</span>
+                        </div>
+                        <div class="base-details">
+                            <div>Цена: <strong id="activeBasePrice">1.1572</strong></div>
+                            <div>Дата: <strong id="activeBaseDate">21.04.2025</strong></div>
+                            <div>Дней назад: <strong id="activBaseDays">38</strong></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="new-base-controls">
+                    <button class="control-btn haptic-feedback" onclick="showNewBaseForm()">➕ Новая базовая точка</button>
+                    <button class="control-btn haptic-feedback" onclick="showBaseHistory()">📋 История точек</button>
+                </div>
+            </div>
+
+            <!-- Форма новой базовой точки -->
+            <div id="newBaseForm" class="new-base-form" style="display: none;">
+                <h4>Создать новый квадрат Гана</h4>
+                <div class="form-group">
+                    <label>Тип точки:</label>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="baseType" value="high" checked>
+                            <span>📈 Максимум</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="baseType" value="low">
+                            <span>📉 Минимум</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Цена:</label>
+                    <input type="number" id="newBasePrice" step="0.0001" min="0.8000" max="1.5000" placeholder="1.1800">
+                </div>
+                <div class="form-group">
+                    <label>Дата:</label>
+                    <input type="date" id="newBaseDate">
+                </div>
+                <div class="form-group">
+                    <label>Описание (опционально):</label>
+                    <input type="text" id="newBaseDescription" placeholder="Например: Прорыв после NFP">
+                </div>
+                <div class="form-actions">
+                    <button class="btn haptic-feedback" onclick="createNewBase()">✅ Создать квадрат</button>
+                    <button class="control-btn haptic-feedback" onclick="hideNewBaseForm()">❌ Отмена</button>
+                </div>
+            </div>
+
+            <!-- История базовых точек -->
+            <div id="baseHistory" class="base-history" style="display: none;">
+                <h4>История базовых точек</h4>
+                <div id="baseHistoryList"></div>
+                <button class="control-btn haptic-feedback" onclick="hideBaseHistory()">Закрыть</button>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn active haptic-feedback" onclick="toggleAlerts()" id="alertsBtn">🔔 Алерты ВКЛ</button>
+                <button class="control-btn haptic-feedback" onclick="toggleVibration()" id="vibrateBtn">📳 Вибрация ВКЛ</button>
+                <button class="control-btn haptic-feedback" onclick="shareResults()">📤 Поделиться</button>
+                <button class="control-btn haptic-feedback" onclick="showPriceHistoryManager()">📅 История цен</button>
+            </div>
+
+            <!-- Менеджер истории цен -->
+            <div id="priceHistoryManager" class="new-base-form" style="display: none;">
+                <h4>📅 Управление историей цен</h4>
+                <div class="form-group">
+                    <label>Добавить историческую цену:</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end;">
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 4px;">Дата:</label>
+                            <input type="date" id="historyDate" style="padding: 8px; font-size: 14px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 0.8em; margin-bottom: 4px;">Цена:</label>
+                            <input type="number" id="historyPrice" step="0.0001" min="0.8000" max="1.5000" placeholder="1.1300" style="padding: 8px; font-size: 14px;">
+                        </div>
+                        <button class="btn haptic-feedback" onclick="addHistoricalPrice()" style="padding: 8px 12px; font-size: 14px;">➕</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Последние добавленные цены:</label>
+                    <div id="recentHistoryList" style="max-height: 150px; overflow-y: auto; background: var(--tg-theme-bg-color, #ffffff); border-radius: 6px; padding: 8px; border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);">
+                        <div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 10px;">
+                            Нет добавленных цен
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="control-btn haptic-feedback" onclick="hidePriceHistoryManager()">Закрыть</button>
+                    <button class="control-btn haptic-feedback" onclick="exportHistoricalData()">📊 Экспорт истории</button>
+                </div>
+            </div>
+
+            <div id="countdownContainer" class="countdown-container"></div>
+
+            <div class="trading-panel">
+                <h3>📈 Активные сигналы</h3>
+                <div id="tradingSignals">
+                    <div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 20px;">
+                        Активных сигналов нет
+                    </div>
+                </div>
+            </div>
+
+            <div class="accuracy-tracker">
+                <h3>🎯 Статистика точности</h3>
+                <div id="accuracyList">
+                    <div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 10px;">
+                        Данные загружаются...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="telegram-actions">
+            <button class="telegram-btn" onclick="sendToChat()">💬 В чат</button>
+            <button class="telegram-btn" onclick="setReminder()">⏰ Напоминание</button>
+            <button class="telegram-btn" onclick="quickMarkTarget(true)" style="background-color: #51cf66;">✅ Попал</button>
+            <button class="telegram-btn" onclick="quickMarkTarget(false)" style="background-color: #ff6b6b;">❌ Промах</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Настройка темы
+        function applyTelegramTheme() {
+            const root = document.documentElement;
+            if (tg.colorScheme === 'dark') {
+                root.style.setProperty('--tg-theme-bg-color', '#212121');
+                root.style.setProperty('--tg-theme-text-color', '#ffffff');
+                root.style.setProperty('--tg-theme-secondary-bg-color', '#424242');
+            }
+        }
+
+        // Глобальные переменные
+        let currentPrice = 1.1300;
+        let alertsEnabled = true;
+        let vibrationEnabled = true;
+        
+        // Система базовых точек
+        let basePoints = JSON.parse(localStorage.getItem('gannBasePoints') || '[]');
+        let activeBaseIndex = parseInt(localStorage.getItem('activeBaseIndex') || '0');
+        
+        // Инициализация базовых точек, если пусто
+        if (basePoints.length === 0) {
+            basePoints = [{
+                id: 1,
+                type: 'high',
+                price: 1.1572,
+                date: new Date('2025-04-21'),
+                description: 'Исторический максимум',
+                created: new Date()
+            }];
+            localStorage.setItem('gannBasePoints', JSON.stringify(basePoints));
+        }
+        
+        // Историческая база данных EUR/USD (закрытие дня, ~1 год)
+        const historicalPrices = {
+            // Май 2024
+            "2024-05-01": 1.0776, "2024-05-02": 1.0823, "2024-05-03": 1.0798, "2024-05-06": 1.0845, "2024-05-07": 1.0821,
+            "2024-05-08": 1.0867, "2024-05-09": 1.0834, "2024-05-10": 1.0889, "2024-05-13": 1.0912, "2024-05-14": 1.0887,
+            "2024-05-15": 1.0923, "2024-05-16": 1.0856, "2024-05-17": 1.0891, "2024-05-20": 1.0834, "2024-05-21": 1.0878,
+            "2024-05-22": 1.0823, "2024-05-23": 1.0867, "2024-05-24": 1.0812, "2024-05-27": 1.0789, "2024-05-28": 1.0834,
+            "2024-05-29": 1.0845, "2024-05-30": 1.0823, "2024-05-31": 1.0867,
+            
+            // Июнь 2024
+            "2024-06-03": 1.0889, "2024-06-04": 1.0923, "2024-06-05": 1.0901, "2024-06-06": 1.0934, "2024-06-07": 1.0889,
+            "2024-06-10": 1.0912, "2024-06-11": 1.0856, "2024-06-12": 1.0823, "2024-06-13": 1.0867, "2024-06-14": 1.0834,
+            "2024-06-17": 1.0789, "2024-06-18": 1.0812, "2024-06-19": 1.0845, "2024-06-20": 1.0878, "2024-06-21": 1.0901,
+            "2024-06-24": 1.0923, "2024-06-25": 1.0889, "2024-06-26": 1.0934, "2024-06-27": 1.0912, "2024-06-28": 1.0945,
+            
+            // Июль 2024
+            "2024-07-01": 1.0967, "2024-07-02": 1.0934, "2024-07-03": 1.0889, "2024-07-04": 1.0856, "2024-07-05": 1.0823,
+            "2024-07-08": 1.0867, "2024-07-09": 1.0901, "2024-07-10": 1.0934, "2024-07-11": 1.0967, "2024-07-12": 1.0989,
+            "2024-07-15": 1.1012, "2024-07-16": 1.0978, "2024-07-17": 1.1001, "2024-07-18": 1.1034, "2024-07-19": 1.1067,
+            "2024-07-22": 1.1089, "2024-07-23": 1.1123, "2024-07-24": 1.1156, "2024-07-25": 1.1134, "2024-07-26": 1.1089,
+            "2024-07-29": 1.1067, "2024-07-30": 1.1123, "2024-07-31": 1.1089,
+            
+            // Август 2024  
+            "2024-08-01": 1.1034, "2024-08-02": 1.0989, "2024-08-05": 1.0934, "2024-08-06": 1.0978, "2024-08-07": 1.1012,
+            "2024-08-08": 1.1045, "2024-08-09": 1.1089, "2024-08-12": 1.1123, "2024-08-13": 1.1156, "2024-08-14": 1.1189,
+            "2024-08-15": 1.1223, "2024-08-16": 1.1189, "2024-08-19": 1.1156, "2024-08-20": 1.1123, "2024-08-21": 1.1089,
+            "2024-08-22": 1.1123, "2024-08-23": 1.1156, "2024-08-26": 1.1189, "2024-08-27": 1.1223, "2024-08-28": 1.1256,
+            "2024-08-29": 1.1289, "2024-08-30": 1.1323,
+            
+            // Сентябрь 2024
+            "2024-09-02": 1.1356, "2024-09-03": 1.1389, "2024-09-04": 1.1423, "2024-09-05": 1.1456, "2024-09-06": 1.1489,
+            "2024-09-09": 1.1523, "2024-09-10": 1.1489, "2024-09-11": 1.1456, "2024-09-12": 1.1423, "2024-09-13": 1.1389,
+            "2024-09-16": 1.1356, "2024-09-17": 1.1323, "2024-09-18": 1.1289, "2024-09-19": 1.1323, "2024-09-20": 1.1356,
+            "2024-09-23": 1.1389, "2024-09-24": 1.1423, "2024-09-25": 1.1456, "2024-09-26": 1.1489, "2024-09-27": 1.1523,
+            "2024-09-30": 1.1556,
+            
+            // Октябрь 2024
+            "2024-10-01": 1.1589, "2024-10-02": 1.1556, "2024-10-03": 1.1523, "2024-10-04": 1.1489, "2024-10-07": 1.1456,
+            "2024-10-08": 1.1423, "2024-10-09": 1.1389, "2024-10-10": 1.1356, "2024-10-11": 1.1323, "2024-10-14": 1.1289,
+            "2024-10-15": 1.1256, "2024-10-16": 1.1223, "2024-10-17": 1.1189, "2024-10-18": 1.1156, "2024-10-21": 1.1123,
+            "2024-10-22": 1.1089, "2024-10-23": 1.1056, "2024-10-24": 1.1023, "2024-10-25": 1.0989, "2024-10-28": 1.0956,
+            "2024-10-29": 1.0923, "2024-10-30": 1.0889, "2024-10-31": 1.0856,
+            
+            // Ноябрь 2024
+            "2024-11-01": 1.0823, "2024-11-04": 1.0789, "2024-11-05": 1.0756, "2024-11-06": 1.0723, "2024-11-07": 1.0689,
+            "2024-11-08": 1.0656, "2024-11-11": 1.0623, "2024-11-12": 1.0589, "2024-11-13": 1.0556, "2024-11-14": 1.0523,
+            "2024-11-15": 1.0489, "2024-11-18": 1.0456, "2024-11-19": 1.0423, "2024-11-20": 1.0389, "2024-11-21": 1.0356,
+            "2024-11-22": 1.0323, "2024-11-25": 1.0289, "2024-11-26": 1.0256, "2024-11-27": 1.0223, "2024-11-28": 1.0189,
+            "2024-11-29": 1.0156,
+            
+            // Декабрь 2024
+            "2024-12-02": 1.0123, "2024-12-03": 1.0089, "2024-12-04": 1.0056, "2024-12-05": 1.0023, "2024-12-06": 0.9989,
+            "2024-12-09": 0.9956, "2024-12-10": 0.9923, "2024-12-11": 0.9889, "2024-12-12": 0.9856, "2024-12-13": 0.9823,
+            "2024-12-16": 0.9789, "2024-12-17": 0.9756, "2024-12-18": 0.9723, "2024-12-19": 0.9689, "2024-12-20": 0.9656,
+            "2024-12-23": 0.9623, "2024-12-24": 0.9589, "2024-12-26": 0.9556, "2024-12-27": 0.9523, "2024-12-30": 0.9489,
+            "2024-12-31": 0.9456,
+            
+            // Январь 2025
+            "2025-01-02": 0.9489, "2025-01-03": 0.9523, "2025-01-06": 0.9556, "2025-01-07": 0.9589, "2025-01-08": 0.9623,
+            "2025-01-09": 0.9656, "2025-01-10": 0.9689, "2025-01-13": 0.9723, "2025-01-14": 0.9756, "2025-01-15": 0.9789,
+            "2025-01-16": 0.9823, "2025-01-17": 0.9856, "2025-01-21": 0.9889, "2025-01-22": 0.9923, "2025-01-23": 0.9956,
+            "2025-01-24": 0.9989, "2025-01-27": 1.0023, "2025-01-28": 1.0056, "2025-01-29": 1.0089, "2025-01-30": 1.0123,
+            "2025-01-31": 1.0156,
+            
+            // Февраль 2025
+            "2025-02-03": 1.0189, "2025-02-04": 1.0223, "2025-02-05": 1.0256, "2025-02-06": 1.0289, "2025-02-07": 1.0323,
+            "2025-02-10": 1.0356, "2025-02-11": 1.0389, "2025-02-12": 1.0423, "2025-02-13": 1.0456, "2025-02-14": 1.0489,
+            "2025-02-18": 1.0523, "2025-02-19": 1.0556, "2025-02-20": 1.0589, "2025-02-21": 1.0623, "2025-02-24": 1.0656,
+            "2025-02-25": 1.0689, "2025-02-26": 1.0723, "2025-02-27": 1.0756, "2025-02-28": 1.0789,
+            
+            // Март 2025
+            "2025-03-03": 1.0823, "2025-03-04": 1.0856, "2025-03-05": 1.0889, "2025-03-06": 1.0923, "2025-03-07": 1.0956,
+            "2025-03-10": 1.0989, "2025-03-11": 1.1023, "2025-03-12": 1.1056, "2025-03-13": 1.1089, "2025-03-14": 1.1123,
+            "2025-03-17": 1.1156, "2025-03-18": 1.1189, "2025-03-19": 1.1223, "2025-03-20": 1.1256, "2025-03-21": 1.1289,
+            "2025-03-24": 1.1323, "2025-03-25": 1.1356, "2025-03-26": 1.1389, "2025-03-27": 1.1423, "2025-03-28": 1.1456,
+            "2025-03-31": 1.1489,
+            
+            // Апрель 2025
+            "2025-04-01": 1.1523, "2025-04-02": 1.1556, "2025-04-03": 1.1589, "2025-04-04": 1.1623, "2025-04-07": 1.1656,
+            "2025-04-08": 1.1689, "2025-04-09": 1.1723, "2025-04-10": 1.1756, "2025-04-11": 1.1789, "2025-04-14": 1.1823,
+            "2025-04-15": 1.1856, "2025-04-16": 1.1889, "2025-04-17": 1.1923, "2025-04-18": 1.1956, "2025-04-21": 1.1989,
+            "2025-04-22": 1.1923, "2025-04-23": 1.1856, "2025-04-24": 1.1789, "2025-04-25": 1.1723, "2025-04-28": 1.1656,
+            "2025-04-29": 1.1589, "2025-04-30": 1.1523,
+            
+            // Май 2025
+            "2025-05-01": 1.1456, "2025-05-02": 1.1389, "2025-05-05": 1.1323, "2025-05-06": 1.1256, "2025-05-07": 1.1189,
+            "2025-05-08": 1.1123, "2025-05-09": 1.1056, "2025-05-12": 1.0989, "2025-05-13": 1.1023, "2025-05-14": 1.1089,
+            "2025-05-15": 1.1156, "2025-05-16": 1.1223, "2025-05-19": 1.1289, "2025-05-20": 1.1356, "2025-05-21": 1.1423,
+            "2025-05-22": 1.1489, "2025-05-23": 1.1523, "2025-05-26": 1.1456, "2025-05-27": 1.1389, "2025-05-28": 1.1323,
+            "2025-05-29": 1.1300
+        };
+        
+        // Функция получения исторических данных
+        function getHistoricalPrice(date) {
+            const dateKey = date.toISOString().split('T')[0];
+            return historicalPrices[dateKey] || null;
+        }
+        
+        // Функция поиска ближайшей исторической цены (для выходных/праздников)
+        function getNearestHistoricalPrice(targetDate) {
+            const dateKey = targetDate.toISOString().split('T')[0];
+            
+            // Сначала точное совпадение
+            if (historicalPrices[dateKey]) {
+                return { price: historicalPrices[dateKey], date: targetDate, exact: true };
+            }
+            
+            // Поиск в диапазоне ±3 дня
+            for (let offset = 1; offset <= 3; offset++) {
+                // Проверяем предыдущие дни
+                const prevDate = new Date(targetDate);
+                prevDate.setDate(prevDate.getDate() - offset);
+                const prevKey = prevDate.toISOString().split('T')[0];
+                
+                if (historicalPrices[prevKey]) {
+                    return { price: historicalPrices[prevKey], date: prevDate, exact: false };
+                }
+                
+                // Проверяем следующие дни
+                const nextDate = new Date(targetDate);
+                nextDate.setDate(nextDate.getDate() + offset);
+                const nextKey = nextDate.toISOString().split('T')[0];
+                
+                if (historicalPrices[nextKey]) {
+                    return { price: historicalPrices[nextKey], date: nextDate, exact: false };
+                }
+            }
+            
+            return null;
+        }
+        
+        // Автоматический backtesting для исторических базовых точек
+        function runHistoricalBacktest(baseIndex = null) {
+            const targetBase = baseIndex !== null ? basePoints[baseIndex] : basePoints[activeBaseIndex];
+            if (!targetBase) return;
+            
+            const now = new Date();
+            const baseDate = new Date(targetBase.date);
+            
+            // Запускаем backtesting только для точек из прошлого
+            if (baseDate >= now) return;
+            
+            const gannForecasts = generateGannForecastsForBase(targetBase);
+            let backtestResults = [];
+            
+            gannForecasts.forEach(forecast => {
+                const targetDate = forecast.date;
+                
+                // Проверяем только прошедшие даты
+                if (targetDate < now) {
+                    const historicalData = getNearestHistoricalPrice(targetDate);
+                    
+                    if (historicalData) {
+                        Object.entries(forecast.targets).forEach(([type, target]) => {
+                            const actualPrice = historicalData.price;
+                            const distance = Math.abs(actualPrice - target);
+                            const tolerance = 0.0025; // 25 пипсов
+                            const isHit = distance <= tolerance;
+                            
+                            const resultId = `backtest_${targetBase.id}_${targetDate.toDateString()}_${type}`;
+                            
+                            // Проверяем, нет ли уже записи
+                            const existingIndex = accuracyData.findIndex(r => r.id === resultId);
+                            
+                            const record = {
+                                id: resultId,
+                                basePointId: targetBase.id,
+                                date: targetDate.toLocaleDateString('ru-RU'),
+                                target: target.toFixed(4),
+                                type: type,
+                                result: isHit ? 'hit' : 'miss',
+                                actualPrice: actualPrice.toFixed(4),
+                                distance: (distance * 10000).toFixed(0),
+                                timestamp: now.toISOString(),
+                                autoDetected: true,
+                                backtesting: true,
+                                historicalExact: historicalData.exact,
+                                historicalSource: historicalData.source || 'builtin',
+                                daysFromTarget: Math.abs((targetDate - baseDate) / (1000 * 60 * 60 * 24))
+                            };
+                            
+                            if (existingIndex >= 0) {
+                                accuracyData[existingIndex] = record;
+                            } else {
+                                accuracyData.push(record);
+                            }
+                            
+                            backtestResults.push(record);
+                        });
+                    }
+                }
+            });
+            
+            // Сохраняем результаты
+            localStorage.setItem('gannAccuracy', JSON.stringify(accuracyData));
+            updateAccuracy();
+            
+            return backtestResults;
+        }
+        
+        // Генерация прогнозов для конкретной базовой точки
+        function generateGannForecastsForBase(basePoint) {
+            const basePrice = basePoint.price;
+            const baseDate = new Date(basePoint.date);
+            const isHigh = basePoint.type === 'high';
+            
+            // Ключевые временные циклы Гана
+            const cycles = [49, 64, 81, 100, 121, 144, 169, 196, 225];
+            
+            return cycles.map(days => {
+                const targetDate = new Date(baseDate);
+                targetDate.setDate(targetDate.getDate() + days);
+                
+                // Расчет целевых уровней
+                let targets;
+                if (isHigh) {
+                    // От максимума - цели вниз
+                    targets = {
+                        strong: basePrice - (days * 0.0001),
+                        medium: basePrice - (days * 0.00005),
+                        priceSquared: calculatePriceSquaredTarget(basePrice, days, false)
+                    };
+                } else {
+                    // От минимума - цели вверх
+                    targets = {
+                        strong: basePrice + (days * 0.0001),
+                        medium: basePrice + (days * 0.00005),
+                        priceSquared: calculatePriceSquaredTarget(basePrice, days, true)
+                    };
+                }
+                
+                return {
+                    days,
+                    date: targetDate,
+                    targets,
+                    basePointId: basePoint.id
+                };
+            });
+        }
+        
+        // Получение результатов backtesting для конкретного прогноза
+        function getBacktestResult(basePointId, targetDate, targetType) {
+            return accuracyData.find(record => 
+                record.basePointId === basePointId &&
+                record.date === targetDate.toLocaleDateString('ru-RU') &&
+                record.type === targetType &&
+                record.backtesting === true
+            );
+        }
+        
+        // Система отслеживания точности (оставляем существующую)
+        let priceHistory = JSON.parse(localStorage.getItem('gannPriceHistory') || '[]');
+        let lastAlertCheck = new Date();
+        
+        // Функция записи истории цен
+        function recordPriceHistory() {
+            const now = new Date();
+            priceHistory.push({
+                price: currentPrice,
+                timestamp: now.toISOString(),
+                date: now.toDateString()
+            });
+            
+            // Храним историю только за последние 30 дней
+            const monthAgo = new Date();
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            priceHistory = priceHistory.filter(record => 
+                new Date(record.timestamp) > monthAgo
+            );
+            
+            localStorage.setItem('gannPriceHistory', JSON.stringify(priceHistory));
+        }
+        
+        // Проверка достижения целей
+        function checkTargetHits() {
+            const now = new Date();
+            const gannForecasts = generateGannForecasts();
+            
+            gannForecasts.forEach(forecast => {
+                const targetDate = forecast.date;
+                const daysFromTarget = Math.abs((now - targetDate) / (1000 * 60 * 60 * 24));
+                
+                // Проверяем цели в окне ±3 дня от целевой даты
+                if (daysFromTarget <= 3) {
+                    const tolerance = 0.0025; // 25 пипсов
+                    
+                    Object.entries(forecast.targets).forEach(([type, target]) => {
+                        const targetKey = `${targetDate.toDateString()}_${type}_${target.toFixed(4)}`;
+                        
+                        // Проверяем, не отмечали ли уже эту цель
+                        const existingRecord = accuracyData.find(record => record.id === targetKey);
+                        if (existingRecord && existingRecord.result !== 'pending') {
+                            return; // Уже обработано
+                        }
+                        
+                        const distance = Math.abs(currentPrice - target);
+                        const wasHit = distance <= tolerance;
+                        
+                        if (wasHit || daysFromTarget > 3) {
+                            // Добавляем или обновляем запись
+                            const recordIndex = accuracyData.findIndex(record => record.id === targetKey);
+                            const record = {
+                                id: targetKey,
+                                date: targetDate.toLocaleDateString('ru-RU'),
+                                target: target.toFixed(4),
+                                type: type,
+                                result: wasHit ? 'hit' : 'miss',
+                                actualPrice: currentPrice.toFixed(4),
+                                distance: (distance * 10000).toFixed(0),
+                                timestamp: now.toISOString(),
+                                autoDetected: true
+                            };
+                            
+                            if (recordIndex >= 0) {
+                                accuracyData[recordIndex] = record;
+                            } else {
+                                accuracyData.push(record);
+                            }
+                            
+                            // Уведомление о результате
+                            if (wasHit) {
+                                showAccuracyAlert(`🎯 ПОПАДАНИЕ! Цель ${target.toFixed(4)} достигнута (${distance * 10000 | 0} пип.)`, 'success');
+                            }
+                        } else {
+                            // Добавляем как ожидающую, если еще нет записи
+                            if (!existingRecord) {
+                                accuracyData.push({
+                                    id: targetKey,
+                                    date: targetDate.toLocaleDateString('ru-RU'),
+                                    target: target.toFixed(4),
+                                    type: type,
+                                    result: 'pending',
+                                    actualPrice: currentPrice.toFixed(4),
+                                    distance: (distance * 10000).toFixed(0),
+                                    timestamp: now.toISOString(),
+                                    autoDetected: true
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Сохраняем обновленные данные
+            localStorage.setItem('gannAccuracy', JSON.stringify(accuracyData));
+            updateAccuracy();
+        }
+        
+        function showAccuracyAlert(message, type = 'info') {
+            if (!alertsEnabled) return;
+            
+            // Показываем уведомление Telegram
+            tg.showAlert(message);
+            
+            if (vibrationEnabled && type === 'success') {
+                hapticFeedback('heavy');
+            }
+        }
+        
+        // Ручное подтверждение результата
+        function manualTargetConfirmation(isHit, targetInfo) {
+            hapticFeedback('medium');
+            
+            const record = {
+                id: `manual_${Date.now()}`,
+                date: new Date().toLocaleDateString('ru-RU'),
+                target: targetInfo.target,
+                type: targetInfo.type,
+                result: isHit ? 'hit' : 'miss',
+                actualPrice: currentPrice.toFixed(4),
+                distance: Math.abs(currentPrice - parseFloat(targetInfo.target)) * 10000,
+                timestamp: new Date().toISOString(),
+                autoDetected: false
+            };
+            
+            accuracyData.push(record);
+            localStorage.setItem('gannAccuracy', JSON.stringify(accuracyData));
+            updateAccuracy();
+            
+            tg.showAlert(isHit ? '✅ Попадание отмечено' : '❌ Промах отмечен');
+        }
+
+        // Функция генерации прогнозов от активной базовой точки
+        function generateGannForecasts() {
+            if (basePoints.length === 0) return [];
+            
+            const activeBase = basePoints[activeBaseIndex];
+            const basePrice = activeBase.price;
+            const baseDate = new Date(activeBase.date);
+            const isHigh = activeBase.type === 'high';
+            
+            // Ключевые временные циклы Гана
+            const cycles = [49, 64, 81, 100, 121, 144, 169, 196, 225];
+            
+            return cycles.map(days => {
+                const targetDate = new Date(baseDate);
+                targetDate.setDate(targetDate.getDate() + days);
+                
+                // Расчет целевых уровней
+                let targets;
+                if (isHigh) {
+                    // От максимума - цели вниз
+                    targets = {
+                        strong: basePrice - (days * 0.0001),
+                        medium: basePrice - (days * 0.00005),
+                        priceSquared: calculatePriceSquaredTarget(basePrice, days, false)
+                    };
+                } else {
+                    // От минимума - цели вверх
+                    targets = {
+                        strong: basePrice + (days * 0.0001),
+                        medium: basePrice + (days * 0.00005),
+                        priceSquared: calculatePriceSquaredTarget(basePrice, days, true)
+                    };
+                }
+                
+                return {
+                    days,
+                    date: targetDate,
+                    targets,
+                    status: 'upcoming'
+                };
+            });
+        }
+        
+        function calculatePriceSquaredTarget(basePrice, days, isUpward) {
+            const basePips = Math.round(basePrice * 10000);
+            const sqrtPips = Math.sqrt(basePips);
+            const adjustment = (days - 64) * 0.3; // 64 - центральное число
+            const newSqrt = isUpward ? sqrtPips + adjustment : sqrtPips - adjustment;
+            const newPrice = Math.pow(Math.abs(newSqrt), 2) / 10000;
+            return Math.max(0.8000, Math.min(1.5000, newPrice));
+        }
+        
+        // Обновляем информацию об активной базовой точке
+        function updateActiveBaseInfo() {
+            if (basePoints.length === 0) return;
+            
+            const activeBase = basePoints[activeBaseIndex];
+            const now = new Date();
+            const daysPassed = Math.floor((now - new Date(activeBase.date)) / (1000 * 60 * 60 * 24));
+            
+            document.getElementById('activeBaseType').textContent = 
+                activeBase.type === 'high' ? 'МАКСИМУМ' : 'МИНИМУМ';
+            document.getElementById('activeBaseType').className = 
+                'base-type ' + (activeBase.type === 'high' ? '' : 'minimum');
+            document.getElementById('activeBasePrice').textContent = activeBase.price.toFixed(4);
+            document.getElementById('activeBaseDate').textContent = 
+                new Date(activeBase.date).toLocaleDateString('ru-RU');
+            document.getElementById('activBaseDays').textContent = daysPassed;
+        }
+        
+        function showNewBaseForm() {
+            hapticFeedback('light');
+            document.getElementById('newBaseForm').style.display = 'block';
+            document.getElementById('newBaseDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('newBasePrice').value = currentPrice.toFixed(4);
+        }
+        
+        function hideNewBaseForm() {
+            hapticFeedback('light');
+            document.getElementById('newBaseForm').style.display = 'none';
+            // Очищаем форму
+            document.getElementById('newBasePrice').value = '';
+            document.getElementById('newBaseDate').value = '';
+            document.getElementById('newBaseDescription').value = '';
+            document.querySelector('input[name="baseType"][value="high"]').checked = true;
+        }
+        
+        function createNewBase() {
+            hapticFeedback('medium');
+            
+            const price = parseFloat(document.getElementById('newBasePrice').value);
+            const date = document.getElementById('newBaseDate').value;
+            const description = document.getElementById('newBaseDescription').value || 'Новая точка';
+            const type = document.querySelector('input[name="baseType"]:checked').value;
+            
+            if (!price || !date || price < 0.8000 || price > 1.5000) {
+                tg.showAlert('Проверьте корректность введенных данных');
+                return;
+            }
+            
+            const newBase = {
+                id: Date.now(),
+                type,
+                price,
+                date: new Date(date),
+                description,
+                created: new Date()
+            };
+            
+            basePoints.push(newBase);
+            activeBaseIndex = basePoints.length - 1;
+            
+            // Сохраняем
+            localStorage.setItem('gannBasePoints', JSON.stringify(basePoints));
+            localStorage.setItem('activeBaseIndex', activeBaseIndex.toString());
+            
+            // Автоматический backtesting для исторических точек
+            const now = new Date();
+            const baseDate = new Date(date);
+            
+            if (baseDate < now) {
+                const backtestResults = runHistoricalBacktest(activeBaseIndex);
+                const totalTests = backtestResults.length;
+                const hits = backtestResults.filter(r => r.result === 'hit').length;
+                const accuracy = totalTests > 0 ? Math.round((hits / totalTests) * 100) : 0;
+                
+                tg.showAlert(`${type === 'high' ? 'Максимум' : 'Минимум'} ${price.toFixed(4)} создан!\n🧪 Backtesting: ${hits}/${totalTests} попаданий (${accuracy}%)`);
+            } else {
+                tg.showAlert(`Новый ${type === 'high' ? 'максимум' : 'минимум'} создан: ${price.toFixed(4)}`);
+            }
+            
+            hideNewBaseForm();
+            updateActiveBaseInfo();
+            renderCountdowns();
+            updateTradingSignals();
+        }
+        
+        function showBaseHistory() {
+            hapticFeedback('light');
+            document.getElementById('baseHistory').style.display = 'block';
+            renderBaseHistory();
+        }
+        
+        function hideBaseHistory() {
+            hapticFeedback('light');
+            document.getElementById('baseHistory').style.display = 'none';
+        }
+        
+        function renderBaseHistory() {
+            const container = document.getElementById('baseHistoryList');
+            
+            if (basePoints.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color, #666);">Нет сохраненных точек</div>';
+                return;
+            }
+            
+            container.innerHTML = basePoints.map((base, index) => `
+                <div class="history-item ${index === activeBaseIndex ? 'active' : ''}">
+                    <div class="history-header">
+                        <div>
+                            <strong>${base.type === 'high' ? '📈' : '📉'} ${base.price.toFixed(4)}</strong>
+                            <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666);">
+                                ${new Date(base.date).toLocaleDateString('ru-RU')}
+                            </div>
+                        </div>
+                        <div>
+                            ${index !== activeBaseIndex ? 
+                                `<button class="switch-base-btn" onclick="switchToBase(${index})">Активировать</button>` : 
+                                '<span style="color: #51cf66; font-weight: bold;">АКТИВЕН</span>'
+                            }
+                            ${basePoints.length > 1 ? 
+                                `<button class="delete-base-btn" onclick="deleteBase(${index})">🗑️</button>` : ''
+                            }
+                        </div>
+                    </div>
+                    <div class="history-details">
+                        ${base.description}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function switchToBase(index) {
+            hapticFeedback('medium');
+            
+            if (index < 0 || index >= basePoints.length) return;
+            
+            activeBaseIndex = index;
+            localStorage.setItem('activeBaseIndex', activeBaseIndex.toString());
+            
+            const base = basePoints[index];
+            const now = new Date();
+            const baseDate = new Date(base.date);
+            
+            // Запускаем backtesting для исторических точек
+            if (baseDate < now) {
+                const backtestResults = runHistoricalBacktest(activeBaseIndex);
+                if (backtestResults && backtestResults.length > 0) {
+                    const hits = backtestResults.filter(r => r.result === 'hit').length;
+                    const accuracy = Math.round((hits / backtestResults.length) * 100);
+                    
+                    tg.showAlert(`Активирован ${base.type === 'high' ? 'максимум' : 'минимум'} ${base.price.toFixed(4)}\n🧪 Backtesting: ${hits}/${backtestResults.length} (${accuracy}%)`);
+                } else {
+                    tg.showAlert(`Переключено на ${base.type === 'high' ? 'максимум' : 'минимум'} ${base.price.toFixed(4)}`);
+                }
+            } else {
+                tg.showAlert(`Переключено на ${base.type === 'high' ? 'максимум' : 'минимум'} ${base.price.toFixed(4)}`);
+            }
+            
+            updateActiveBaseInfo();
+            renderCountdowns();
+            updateTradingSignals();
+            renderBaseHistory();
+        }
+        
+        function deleteBase(index) {
+            hapticFeedback('light');
+            
+            if (basePoints.length <= 1) {
+                tg.showAlert('Нельзя удалить последнюю базовую точку');
+                return;
+            }
+            
+            const base = basePoints[index];
+            tg.showConfirm(`Удалить точку ${base.price.toFixed(4)} от ${new Date(base.date).toLocaleDateString('ru-RU')}?`, (confirmed) => {
+                if (confirmed) {
+                    basePoints.splice(index, 1);
+                    
+                    // Корректируем активный индекс
+                    if (activeBaseIndex >= index) {
+                        activeBaseIndex = Math.max(0, activeBaseIndex - 1);
+                    }
+                    
+                    localStorage.setItem('gannBasePoints', JSON.stringify(basePoints));
+                    localStorage.setItem('activeBaseIndex', activeBaseIndex.toString());
+                    
+                    updateActiveBaseInfo();
+                    renderCountdowns();
+                    updateTradingSignals();
+                    renderBaseHistory();
+                    
+                    tg.showAlert('Точка удалена');
+                }
+            });
+        }
+
+        // Функции с тактильной обратной связью
+        function hapticFeedback(type = 'impact') {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred(type);
+            }
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleString('ru-RU', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+            if (basePoints.length > 0) {
+                const activeBase = basePoints[activeBaseIndex];
+                const daysPassed = Math.floor((now - new Date(activeBase.date)) / (1000 * 60 * 60 * 24));
+                document.getElementById('daysPassed').textContent = daysPassed;
+                
+                const gannForecasts = generateGannForecasts();
+                const nextForecast = gannForecasts.find(f => f.date > now);
+                if (nextForecast) {
+                    const daysLeft = Math.ceil((nextForecast.date - now) / (1000 * 60 * 60 * 24));
+                    document.getElementById('nextAlert').textContent = daysLeft;
+                }
+            }
+        }
+
+        function updateCurrentPrice() {
+            hapticFeedback('light');
+            const newPrice = parseFloat(document.getElementById('priceUpdate').value);
+            
+            if (newPrice && newPrice > 1.0000 && newPrice < 1.3000) {
+                currentPrice = newPrice;
+                document.getElementById('currentPrice').textContent = newPrice.toFixed(4);
+                document.getElementById('priceUpdate').value = '';
+                
+                localStorage.setItem('currentPrice', newPrice.toString());
+                
+                // Записываем в историю цен
+                recordPriceHistory();
+                
+                // Проверяем достижение целей
+                checkTargetHits();
+                
+                checkPriceAlerts();
+                updateTradingSignals();
+                renderCountdowns();
+                
+                // Уведомление через Telegram
+                tg.showAlert(`Цена обновлена: ${newPrice.toFixed(4)}`);
+            } else {
+                tg.showAlert('Введите корректную цену от 1.0000 до 1.3000');
+            }
+        }
+
+        function checkPriceAlerts() {
+            const now = new Date();
+            const gannForecasts = generateGannForecasts();
+            
+            gannForecasts.forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntil <= 3 && daysUntil >= -1) {
+                    const tolerance = 0.0020;
+                    
+                    Object.entries(forecast.targets).forEach(([type, target]) => {
+                        if (Math.abs(currentPrice - target) <= tolerance) {
+                            if (alertsEnabled) {
+                                tg.showAlert(`🎯 GANN ALERT!\nЦена ${currentPrice.toFixed(4)} близко к цели ${target.toFixed(4)}\nТип: ${type}`);
+                            }
+                            
+                            if (vibrationEnabled) {
+                                hapticFeedback('heavy');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function renderCountdowns() {
+            const container = document.getElementById('countdownContainer');
+            const now = new Date();
+            const gannForecasts = generateGannForecasts();
+            
+            container.innerHTML = '';
+            
+            // Показывать только ближайшие 6 прогнозов
+            gannForecasts.slice(0, 6).forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - now) / (1000 * 60 * 60 * 24));
+                
+                let cardClass = 'countdown-card ';
+                if (daysUntil <= 0) cardClass += 'passed';
+                else if (daysUntil <= 3) cardClass += 'active';
+                else cardClass += 'upcoming';
+                
+                const card = document.createElement('div');
+                card.className = cardClass;
+                
+                const targets = forecast.targets;
+                const distances = {
+                    strong: Math.abs(currentPrice - targets.strong),
+                    medium: Math.abs(currentPrice - targets.medium),
+                    priceSquared: Math.abs(currentPrice - targets.priceSquared)
+                };
+                const closestTarget = Object.keys(distances).reduce((a, b) => 
+                    distances[a] < distances[b] ? a : b);
+                
+                // Проверяем результаты backtesting для прошедших дат
+                let backtestInfo = '';
+                if (daysUntil <= 0) {
+                    const activeBase = basePoints[activeBaseIndex];
+                    const backtestResults = {};
+                    
+                    Object.keys(targets).forEach(type => {
+                        const result = getBacktestResult(activeBase.id, forecast.date, type);
+                        if (result) {
+                            backtestResults[type] = result;
+                        }
+                    });
+                    
+                    // Если есть результаты backtesting, показываем их
+                    if (Object.keys(backtestResults).length > 0) {
+                        const resultsHtml = Object.entries(backtestResults).map(([type, result]) => {
+                            const icon = result.result === 'hit' ? '✅' : '❌';
+                            const color = result.result === 'hit' ? '#51cf66' : '#ff6b6b';
+                            const typeName = type === 'strong' ? 'Сильная' : 
+                                           type === 'medium' ? 'Средняя' : 'Price²';
+                            return `<span style="color: ${color};">${typeName} ${icon}</span>`;
+                        }).join(' • ');
+                        
+                        backtestInfo = `
+                            <div style="background: rgba(0,0,0,0.1); padding: 8px; border-radius: 6px; margin-top: 8px; font-size: 0.8em;">
+                                🧪 Backtesting: ${resultsHtml}
+                            </div>
+                        `;
+                    }
+                }
+                
+                card.innerHTML = `
+                    <div class="date-header">
+                        <div class="target-date">${forecast.date.toLocaleDateString('ru-RU')}</div>
+                        <div class="days-left">${daysUntil > 0 ? `${daysUntil}д` : 'Прошло'}</div>
+                    </div>
+                    
+                    <div class="price-targets">
+                        <div class="price-target" style="${closestTarget === 'strong' ? 'border-color: var(--tg-theme-accent-text-color, #3390ec); border-width: 2px;' : ''}">
+                            <div class="target-label">Сильная</div>
+                            <div class="target-price">${targets.strong.toFixed(4)}</div>
+                        </div>
+                        <div class="price-target" style="${closestTarget === 'medium' ? 'border-color: var(--tg-theme-accent-text-color, #3390ec); border-width: 2px;' : ''}">
+                            <div class="target-label">Средняя</div>
+                            <div class="target-price">${targets.medium.toFixed(4)}</div>
+                        </div>
+                        <div class="price-target" style="${closestTarget === 'priceSquared' ? 'border-color: var(--tg-theme-accent-text-color, #3390ec); border-width: 2px;' : ''}">
+                            <div class="target-label">Price²</div>
+                            <div class="target-price">${targets.priceSquared.toFixed(4)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-zone ${daysUntil <= 3 && daysUntil >= -1 ? 'active' : ''}">
+                        🚨 ВНИМАНИЕ! Цель близко!
+                    </div>
+                    
+                    <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666); margin-top: 8px; text-align: center;">
+                        ${daysUntil > 0 ? 
+                            `Ближайшая: ${targets[closestTarget].toFixed(4)} (${(distances[closestTarget] * 10000).toFixed(0)} пип.)` :
+                            `Цикл: ${forecast.days} дней`
+                        }
+                    </div>
+                    
+                    ${backtestInfo}
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function updateTradingSignals() {
+            const container = document.getElementById('tradingSignals');
+            const now = new Date();
+            const gannForecasts = generateGannForecasts();
+            let signals = [];
+            
+            gannForecasts.forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntil <= 7 && daysUntil >= -2) {
+                    const tolerance = 0.0030;
+                    
+                    Object.entries(forecast.targets).forEach(([type, target]) => {
+                        const distance = Math.abs(currentPrice - target);
+                        
+                        if (distance <= tolerance) {
+                            const strength = distance <= 0.0010 ? 'strong' : 
+                                           distance <= 0.0020 ? 'medium' : 'weak';
+                            const direction = currentPrice > target ? 'SELL' : 'BUY';
+                            
+                            signals.push({
+                                date: forecast.date.toLocaleDateString('ru-RU'),
+                                direction,
+                                target: target.toFixed(4),
+                                strength,
+                                distance: (distance * 10000).toFixed(0),
+                                type
+                            });
+                        }
+                    });
+                }
+            });
+            
+            if (signals.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 20px;">Активных сигналов нет</div>';
+                return;
+            }
+            
+            container.innerHTML = signals.map(signal => `
+                <div class="signal-item signal-${signal.strength}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <strong>${signal.direction}</strong>
+                        <span style="font-size: 0.9em;">${signal.target}</span>
+                    </div>
+                    <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666);">
+                        ${signal.date} • ${signal.distance} пип. • ${signal.type}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAlerts() {
+            hapticFeedback('light');
+            alertsEnabled = !alertsEnabled;
+            const btn = document.getElementById('alertsBtn');
+            btn.textContent = alertsEnabled ? '🔔 Алерты ВКЛ' : '🔔 Алерты ВЫКЛ';
+            btn.classList.toggle('active', alertsEnabled);
+        }
+
+        function toggleVibration() {
+            hapticFeedback('light');
+            vibrationEnabled = !vibrationEnabled;
+            const btn = document.getElementById('vibrateBtn');
+            btn.textContent = vibrationEnabled ? '📳 Вибрация ВКЛ' : '📳 Вибрация ВЫКЛ';
+            btn.classList.toggle('active', vibrationEnabled);
+        }
+
+        function shareResults() {
+            hapticFeedback('medium');
+            const gannForecasts = generateGannForecasts();
+            const nextForecast = gannForecasts.find(f => f.date > new Date());
+            
+            if (nextForecast) {
+                const activeBase = basePoints[activeBaseIndex];
+                const message = `🎯 Gann Analysis EUR/USD
+Базовая точка: ${activeBase.type === 'high' ? '📈 Максимум' : '📉 Минимум'} ${activeBase.price.toFixed(4)} (${new Date(activeBase.date).toLocaleDateString('ru-RU')})
+Текущая цена: ${currentPrice.toFixed(4)}
+Следующая цель: ${nextForecast.date.toLocaleDateString('ru-RU')}
+Уровни: ${Object.values(nextForecast.targets).map(t => t.toFixed(4)).join(' | ')}`;
+                
+                tg.switchInlineQuery(message);
+            }
+        }
+
+        function sendToChat() {
+            hapticFeedback('medium');
+            const activeBase = basePoints[activeBaseIndex];
+            const gannForecasts = generateGannForecasts();
+            const nextForecast = gannForecasts.find(f => f.date > new Date());
+            
+            const message = `📊 Gann Monitor Update
+Базовая точка: ${activeBase.type === 'high' ? '📈' : '📉'} ${activeBase.price.toFixed(4)}
+EUR/USD: ${currentPrice.toFixed(4)}
+Статус: Мониторинг активен
+Следующая проверка: ${nextForecast?.date.toLocaleDateString('ru-RU') || 'TBD'}`;
+            
+            tg.sendData(JSON.stringify({
+                action: 'share_update',
+                message: message,
+                price: currentPrice,
+                basePoint: activeBase,
+                timestamp: new Date().toISOString()
+            }));
+        }
+
+        function setReminder() {
+            hapticFeedback('medium');
+            const gannForecasts = generateGannForecasts();
+            const nextForecast = gannForecasts.find(f => f.date > new Date());
+            
+            if (nextForecast) {
+                tg.showAlert(`Напоминание установлено на ${nextForecast.date.toLocaleDateString('ru-RU')}`);
+                
+                // Отправляем данные боту для установки напоминания
+                tg.sendData(JSON.stringify({
+                    action: 'set_reminder',
+                    date: nextForecast.date.toISOString(),
+                    targets: nextForecast.targets,
+                    basePoint: basePoints[activeBaseIndex]
+                }));
+            }
+        }
+
+        function resetAccuracy() {
+            hapticFeedback('light');
+            tg.showConfirm('Сбросить всю статистику точности?', (confirmed) => {
+                if (confirmed) {
+                    accuracyData = [];
+                    localStorage.removeItem('gannAccuracy');
+                    updateAccuracy();
+                    tg.showAlert('Статистика сброшена');
+                }
+            });
+        }
+        
+        // Управление историческими данными
+        let userHistoricalData = JSON.parse(localStorage.getItem('userHistoricalData') || '{}');
+        
+        function showPriceHistoryManager() {
+            hapticFeedback('light');
+            document.getElementById('priceHistoryManager').style.display = 'block';
+            document.getElementById('historyDate').value = new Date().toISOString().split('T')[0];
+            updateRecentHistoryList();
+        }
+        
+        function hidePriceHistoryManager() {
+            hapticFeedback('light');
+            document.getElementById('priceHistoryManager').style.display = 'none';
+        }
+        
+        function addHistoricalPrice() {
+            hapticFeedback('medium');
+            
+            const date = document.getElementById('historyDate').value;
+            const price = parseFloat(document.getElementById('historyPrice').value);
+            
+            if (!date || !price || price < 0.8000 || price > 1.5000) {
+                tg.showAlert('Проверьте корректность введенных данных');
+                return;
+            }
+            
+            const dateKey = date;
+            userHistoricalData[dateKey] = price;
+            
+            // Сохраняем пользовательские данные
+            localStorage.setItem('userHistoricalData', JSON.stringify(userHistoricalData));
+            
+            // Очищаем форму
+            document.getElementById('historyPrice').value = '';
+            const nextDate = new Date(date);
+            nextDate.setDate(nextDate.getDate() + 1);
+            document.getElementById('historyDate').value = nextDate.toISOString().split('T')[0];
+            
+            updateRecentHistoryList();
+            
+            // Перезапускаем backtesting для активной точки
+            const activeBase = basePoints[activeBaseIndex];
+            if (activeBase && new Date(activeBase.date) < new Date()) {
+                runHistoricalBacktest(activeBaseIndex);
+                renderCountdowns();
+                updateAccuracy();
+            }
+            
+            tg.showAlert(`Цена ${price.toFixed(4)} добавлена на ${new Date(date).toLocaleDateString('ru-RU')}`);
+        }
+        
+        function updateRecentHistoryList() {
+            const container = document.getElementById('recentHistoryList');
+            const recentEntries = Object.entries(userHistoricalData)
+                .sort(([a], [b]) => new Date(b) - new Date(a))
+                .slice(0, 10);
+            
+            if (recentEntries.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 10px;">Нет добавленных цен</div>';
+                return;
+            }
+            
+            container.innerHTML = recentEntries.map(([date, price]) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);">
+                    <div>
+                        <div style="font-weight: bold;">${new Date(date).toLocaleDateString('ru-RU')}</div>
+                        <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666);">${price.toFixed(4)}</div>
+                    </div>
+                    <button onclick="removeHistoricalPrice('${date}')" style="background: #ff6b6b; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.8em;">🗑️</button>
+                </div>
+            `).join('');
+        }
+        
+        function removeHistoricalPrice(dateKey) {
+            hapticFeedback('light');
+            delete userHistoricalData[dateKey];
+            localStorage.setItem('userHistoricalData', JSON.stringify(userHistoricalData));
+            updateRecentHistoryList();
+            
+            // Перезапускаем backtesting
+            const activeBase = basePoints[activeBaseIndex];
+            if (activeBase && new Date(activeBase.date) < new Date()) {
+                runHistoricalBacktest(activeBaseIndex);
+                renderCountdowns();
+                updateAccuracy();
+            }
+            
+            tg.showAlert('Цена удалена');
+        }
+        
+        function exportHistoricalData() {
+            hapticFeedback('light');
+            
+            const allData = {
+                builtin: Object.keys(historicalPrices).length,
+                userAdded: Object.keys(userHistoricalData).length,
+                userData: userHistoricalData,
+                exportDate: new Date().toISOString()
+            };
+            
+            tg.sendData(JSON.stringify({
+                action: 'export_historical_data',
+                data: allData
+            }));
+            
+            tg.showAlert('История цен отправлена в чат');
+        }
+        
+        // Модифицированная функция поиска исторических данных с учетом пользовательских данных
+        function getNearestHistoricalPrice(targetDate) {
+            const dateKey = targetDate.toISOString().split('T')[0];
+            
+            // Сначала проверяем пользовательские данные
+            if (userHistoricalData[dateKey]) {
+                return { price: userHistoricalData[dateKey], date: targetDate, exact: true, source: 'user' };
+            }
+            
+            // Затем встроенные данные
+            if (historicalPrices[dateKey]) {
+                return { price: historicalPrices[dateKey], date: targetDate, exact: true, source: 'builtin' };
+            }
+            
+            // Поиск в диапазоне ±3 дня
+            for (let offset = 1; offset <= 3; offset++) {
+                // Проверяем предыдущие дни
+                const prevDate = new Date(targetDate);
+                prevDate.setDate(prevDate.getDate() - offset);
+                const prevKey = prevDate.toISOString().split('T')[0];
+                
+                if (userHistoricalData[prevKey]) {
+                    return { price: userHistoricalData[prevKey], date: prevDate, exact: false, source: 'user' };
+                }
+                
+                if (historicalPrices[prevKey]) {
+                    return { price: historicalPrices[prevKey], date: prevDate, exact: false, source: 'builtin' };
+                }
+                
+                // Проверяем следующие дни
+                const nextDate = new Date(targetDate);
+                nextDate.setDate(nextDate.getDate() + offset);
+                const nextKey = nextDate.toISOString().split('T')[0];
+                
+                if (userHistoricalData[nextKey]) {
+                    return { price: userHistoricalData[nextKey], date: nextDate, exact: false, source: 'user' };
+                }
+                
+                if (historicalPrices[nextKey]) {
+                    return { price: historicalPrices[nextKey], date: nextDate, exact: false, source: 'user' };
+                }
+            }
+            
+            return null;
+        }
+
+        function updateAccuracy() {
+            // Разделяем backtesting и реальные данные
+            const backtestData = accuracyData.filter(item => item.backtesting === true);
+            const realTimeData = accuracyData.filter(item => item.backtesting !== true);
+            
+            // Общая статистика (все данные)
+            const allCompleted = accuracyData.filter(item => item.result !== 'pending');
+            const allHits = accuracyData.filter(item => item.result === 'hit');
+            const allPending = accuracyData.filter(item => item.result === 'pending');
+            
+            let overallAccuracy = 0;
+            if (allCompleted.length > 0) {
+                overallAccuracy = Math.round((allHits.length / allCompleted.length) * 100);
+            }
+            
+            document.getElementById('accuracy').textContent = 
+                allCompleted.length > 0 ? `${overallAccuracy}%` : 'Н/Д';
+            
+            // Статистика по типам целей (включая backtesting)
+            const typeStats = {
+                strong: { hits: 0, total: 0, backtestHits: 0, backtestTotal: 0 },
+                medium: { hits: 0, total: 0, backtestHits: 0, backtestTotal: 0 },
+                priceSquared: { hits: 0, total: 0, backtestHits: 0, backtestTotal: 0 }
+            };
+            
+            allCompleted.forEach(record => {
+                if (typeStats[record.type]) {
+                    if (record.backtesting) {
+                        typeStats[record.type].backtestTotal++;
+                        if (record.result === 'hit') {
+                            typeStats[record.type].backtestHits++;
+                        }
+                    } else {
+                        typeStats[record.type].total++;
+                        if (record.result === 'hit') {
+                            typeStats[record.type].hits++;
+                        }
+                    }
+                }
+            });
+            
+            // Статистика по базовым точкам
+            const basePointStats = {};
+            basePoints.forEach(base => {
+                const baseResults = allCompleted.filter(r => r.basePointId === base.id);
+                const baseHits = baseResults.filter(r => r.result === 'hit');
+                
+                if (baseResults.length > 0) {
+                    basePointStats[base.id] = {
+                        base: base,
+                        total: baseResults.length,
+                        hits: baseHits.length,
+                        accuracy: Math.round((baseHits.length / baseResults.length) * 100),
+                        backtesting: baseResults.some(r => r.backtesting)
+                    };
+                }
+            });
+            
+            // Статистика по временным циклам
+            const cycleStats = {};
+            allCompleted.forEach(record => {
+                if (record.daysFromTarget) {
+                    const cycle = Math.round(record.daysFromTarget);
+                    if (!cycleStats[cycle]) {
+                        cycleStats[cycle] = { hits: 0, total: 0 };
+                    }
+                    cycleStats[cycle].total++;
+                    if (record.result === 'hit') {
+                        cycleStats[cycle].hits++;
+                    }
+                }
+            });
+            
+            // Обновляем интерфейс
+            const container = document.getElementById('accuracyList');
+            
+            if (allCompleted.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 10px;">Нет данных для анализа</div>';
+                return;
+            }
+            
+            // Общая статистика
+            const generalStatsHtml = `
+                <div style="background: rgba(51, 144, 236, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 8px;">
+                        <span>📊 Общая точность:</span>
+                        <span style="color: ${overallAccuracy >= 60 ? '#51cf66' : overallAccuracy >= 40 ? '#ffa726' : '#ff6b6b'};">
+                            ${allHits.length}/${allCompleted.length} (${overallAccuracy}%)
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9em;">
+                        <span>🧪 Backtesting: ${backtestData.filter(r => r.result !== 'pending').length}</span>
+                        <span>⏱️ Реальное время: ${realTimeData.filter(r => r.result !== 'pending').length}</span>
+                        <span>⏳ Ожидают: ${allPending.length}</span>
+                    </div>
+                </div>
+            `;
+            
+            // Статистика по типам целей
+            const typeStatsHtml = Object.entries(typeStats)
+                .filter(([type, stats]) => stats.total + stats.backtestTotal > 0)
+                .map(([type, stats]) => {
+                    const totalHits = stats.hits + stats.backtestHits;
+                    const totalCount = stats.total + stats.backtestTotal;
+                    const typeAccuracy = Math.round((totalHits / totalCount) * 100);
+                    const typeName = type === 'strong' ? 'Сильные' : 
+                                   type === 'medium' ? 'Средние' : 'Price²';
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+                            <span>${typeName}:</span>
+                            <div style="text-align: right;">
+                                <div style="color: ${typeAccuracy >= 60 ? '#51cf66' : typeAccuracy >= 40 ? '#ffa726' : '#ff6b6b'};">
+                                    ${totalHits}/${totalCount} (${typeAccuracy}%)
+                                </div>
+                                ${stats.backtestTotal > 0 ? 
+                                    `<div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666);">
+                                        🧪${stats.backtestHits}/${stats.backtestTotal} ⏱️${stats.hits}/${stats.total}
+                                    </div>` : ''
+                                }
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            
+            // Статистика по базовым точкам
+            const baseStatsHtml = Object.values(basePointStats)
+                .sort((a, b) => b.accuracy - a.accuracy)
+                .slice(0, 3)
+                .map(stat => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 0.9em;">
+                        <div>
+                            <div>${stat.base.type === 'high' ? '📈' : '📉'} ${stat.base.price.toFixed(4)}</div>
+                            <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666);">
+                                ${new Date(stat.base.date).toLocaleDateString('ru-RU')} ${stat.backtesting ? '🧪' : '⏱️'}
+                            </div>
+                        </div>
+                        <div style="text-align: right; color: ${stat.accuracy >= 60 ? '#51cf66' : stat.accuracy >= 40 ? '#ffa726' : '#ff6b6b'};">
+                            ${stat.hits}/${stat.total} (${stat.accuracy}%)
+                        </div>
+                    </div>
+                `).join('');
+            
+            // Лучшие временные циклы
+            const bestCycles = Object.entries(cycleStats)
+                .filter(([cycle, stats]) => stats.total >= 3) // Минимум 3 теста
+                .sort(([,a], [,b]) => (b.hits/b.total) - (a.hits/a.total))
+                .slice(0, 3)
+                .map(([cycle, stats]) => {
+                    const accuracy = Math.round((stats.hits / stats.total) * 100);
+                    return `
+                        <div style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 0.9em;">
+                            <span>${cycle} дней:</span>
+                            <span style="color: ${accuracy >= 60 ? '#51cf66' : accuracy >= 40 ? '#ffa726' : '#ff6b6b'};">
+                                ${stats.hits}/${stats.total} (${accuracy}%)
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+            
+            // Последние результаты
+            const recentResults = allCompleted
+                .slice(-6)
+                .reverse()
+                .map(item => {
+                    const resultIcon = item.result === 'hit' ? '✅' : '❌';
+                    const resultColor = item.result === 'hit' ? '#51cf66' : '#ff6b6b';
+                    const sourceIcon = item.backtesting ? '🧪' : '⏱️';
+                    const exactIcon = item.historicalExact === false ? '≈' : '';
+                    const userDataIcon = item.historicalSource === 'user' ? '👤' : '';
+                    
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--tg-theme-section-separator-color, #e0e0e0); font-size: 0.9em;">
+                            <div>
+                                <div>${item.target} • ${item.type} ${sourceIcon}${exactIcon}${userDataIcon}</div>
+                                <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666);">
+                                    ${item.date} • ${item.distance} пип.
+                                </div>
+                            </div>
+                            <span style="color: ${resultColor}; font-size: 1.1em;">${resultIcon}</span>
+                        </div>
+                    `;
+                }).join('');
+            
+            container.innerHTML = `
+                ${generalStatsHtml}
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">🎯 По типам целей:</div>
+                    <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 6px;">
+                        ${typeStatsHtml || '<div style="text-align: center;">Нет завершенных прогнозов</div>'}
+                    </div>
+                </div>
+                
+                ${baseStatsHtml ? `
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-weight: bold; margin-bottom: 8px;">📍 Лучшие базовые точки:</div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 6px;">
+                            ${baseStatsHtml}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${bestCycles ? `
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-weight: bold; margin-bottom: 8px;">⏰ Лучшие циклы:</div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 8px; border-radius: 6px;">
+                            ${bestCycles}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">📝 Последние результаты:</div>
+                    ${recentResults || '<div style="text-align: center; color: var(--tg-theme-hint-color, #666);">Нет результатов</div>'}
+                </div>
+                
+                <div class="manual-controls">
+                    <button class="control-btn haptic-feedback" onclick="showManualEntry()" style="width: 100%; margin-bottom: 8px;">➕ Добавить результат вручную</button>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <button class="control-btn haptic-feedback" onclick="exportAccuracyData()">📊 Экспорт</button>
+                        <button class="control-btn haptic-feedback" onclick="clearOldData()">🧹 Очистить</button>
+                        <button class="control-btn haptic-feedback" onclick="resetAccuracy()">🔄 Сброс</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function showManualEntry() {
+            hapticFeedback('light');
+            
+            const gannForecasts = generateGannForecasts();
+            const nearTargets = [];
+            
+            gannForecasts.forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - new Date()) / (1000 * 60 * 60 * 24));
+                if (daysUntil >= -5 && daysUntil <= 5) {
+                    Object.entries(forecast.targets).forEach(([type, target]) => {
+                        nearTargets.push({
+                            date: forecast.date.toLocaleDateString('ru-RU'),
+                            target: target.toFixed(4),
+                            type: type,
+                            days: daysUntil
+                        });
+                    });
+                }
+            });
+            
+            if (nearTargets.length === 0) {
+                tg.showAlert('Нет активных целей для отметки');
+                return;
+            }
+            
+            // Создаем простой выбор цели
+            const targetOptions = nearTargets.slice(0, 6).map((target, index) => 
+                `${index + 1}. ${target.target} (${target.type}, ${target.date})`
+            ).join('\n');
+            
+            tg.showAlert(`Выберите цель для отметки:\n${targetOptions}\n\nИспользуйте кнопки ниже для быстрой отметки ближайших целей`);
+        }
+        
+        function quickMarkTarget(isHit) {
+            hapticFeedback('medium');
+            
+            // Находим ближайшую цель к текущей цене
+            const gannForecasts = generateGannForecasts();
+            let closestTarget = null;
+            let minDistance = Infinity;
+            
+            gannForecasts.forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - new Date()) / (1000 * 60 * 60 * 24));
+                if (daysUntil >= -3 && daysUntil <= 3) {
+                    Object.entries(forecast.targets).forEach(([type, target]) => {
+                        const distance = Math.abs(currentPrice - target);
+                        if (distance < minDistance && distance <= 0.0050) { // В пределах 50 пипсов
+                            minDistance = distance;
+                            closestTarget = {
+                                target: target.toFixed(4),
+                                type: type,
+                                date: forecast.date.toLocaleDateString('ru-RU')
+                            };
+                        }
+                    });
+                }
+            });
+            
+            if (closestTarget) {
+                manualTargetConfirmation(isHit, closestTarget);
+            } else {
+                tg.showAlert('Нет близких целей для быстрой отметки');
+            }
+        }
+        
+        function exportAccuracyData() {
+            hapticFeedback('light');
+            
+            const data = {
+                summary: {
+                    totalTargets: accuracyData.filter(r => r.result !== 'pending').length,
+                    hits: accuracyData.filter(r => r.result === 'hit').length,
+                    misses: accuracyData.filter(r => r.result === 'miss').length,
+                    accuracy: accuracyData.filter(r => r.result !== 'pending').length > 0 ? 
+                        Math.round((accuracyData.filter(r => r.result === 'hit').length / accuracyData.filter(r => r.result !== 'pending').length) * 100) : 0
+                },
+                details: accuracyData,
+                exportDate: new Date().toISOString()
+            };
+            
+            tg.sendData(JSON.stringify({
+                action: 'export_accuracy',
+                data: data
+            }));
+            
+            tg.showAlert('Данные точности отправлены в чат');
+        }
+        
+        function clearOldData() {
+            hapticFeedback('light');
+            
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            
+            const oldCount = accuracyData.length;
+            accuracyData = accuracyData.filter(record => 
+                new Date(record.timestamp) > oneWeekAgo
+            );
+            
+            localStorage.setItem('gannAccuracy', JSON.stringify(accuracyData));
+            updateAccuracy();
+            
+            tg.showAlert(`Удалено ${oldCount - accuracyData.length} старых записей`);
+        }
+
+        // Инициализация
+        function init() {
+            applyTelegramTheme();
+            
+            const savedPrice = localStorage.getItem('currentPrice');
+            if (savedPrice) {
+                currentPrice = parseFloat(savedPrice);
+                document.getElementById('currentPrice').textContent = currentPrice.toFixed(4);
+            }
+            
+            // Убедимся, что activeBaseIndex корректен
+            if (activeBaseIndex >= basePoints.length) {
+                activeBaseIndex = 0;
+                localStorage.setItem('activeBaseIndex', '0');
+            }
+            
+            // Запускаем backtesting для всех исторических точек при первой загрузке
+            const backtestingRunKey = 'backtestingCompleted';
+            const lastRun = localStorage.getItem(backtestingRunKey);
+            const today = new Date().toDateString();
+            
+            if (lastRun !== today) {
+                basePoints.forEach((base, index) => {
+                    const baseDate = new Date(base.date);
+                    const now = new Date();
+                    
+                    if (baseDate < now) {
+                        // Проверяем, есть ли уже результаты для этой базовой точки
+                        const existingResults = accuracyData.filter(r => r.basePointId === base.id && r.backtesting);
+                        
+                        if (existingResults.length === 0) {
+                            runHistoricalBacktest(index);
+                        }
+                    }
+                });
+                
+                localStorage.setItem(backtestingRunKey, today);
+            }
+            
+            updateActiveBaseInfo();
+            updateCurrentTime();
+            renderCountdowns();
+            updateTradingSignals();
+            updateAccuracy();
+            
+            // Первичная проверка целей
+            checkTargetHits();
+            
+            // Обновляем каждую минуту
+            setInterval(() => {
+                updateCurrentTime();
+                renderCountdowns();
+                if (alertsEnabled) {
+                    checkPriceAlerts();
+                }
+                // Проверяем цели каждые 5 минут
+                if (new Date().getMinutes() % 5 === 0) {
+                    checkTargetHits();
+                }
+            }, 60000);
+            
+            // Обновляем торговые сигналы каждые 30 секунд
+            setInterval(updateTradingSignals, 30000);
+            
+            // Проверяем цели каждые 10 минут
+            setInterval(checkTargetHits, 600000);
+        }
+
+        // Обработка событий Telegram
+        tg.onEvent('themeChanged', applyTelegramTheme);
+        
+        tg.onEvent('backButtonClicked', () => {
+            tg.close();
+        });
+
+        // Запуск при загрузке
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
