@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gann Monitor - Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 10px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 15px;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5em;
+            color: var(--tg-theme-text-color, #000);
+            margin-bottom: 5px;
+        }
+        
+        .header h2 {
+            font-size: 1em;
+            color: var(--tg-theme-hint-color, #666);
+            font-weight: normal;
+        }
+        
+        .current-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+        }
+        
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--tg-theme-accent-text-color, #3390ec);
+            margin-bottom: 5px;
+        }
+        
+        .status-label {
+            font-size: 0.8em;
+            color: var(--tg-theme-hint-color, #666);
+        }
+        
+        .price-input {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .price-input label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .price-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .btn {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: opacity 0.2s;
+        }
+        
+        .btn:active {
+            opacity: 0.7;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000);
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: all 0.2s;
+        }
+        
+        .control-btn.active {
+            background-color: var(--tg-theme-accent-text-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .countdown-container {
+            margin-bottom: 20px;
+        }
+        
+        .countdown-card {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--tg-theme-hint-color, #666);
+            position: relative;
+        }
+        
+        .countdown-card.active {
+            border-left-color: #ff6b6b;
+            background-color: rgba(255, 107, 107, 0.1);
+            animation: pulse 2s infinite;
+        }
+        
+        .countdown-card.upcoming {
+            border-left-color: #51cf66;
+        }
+        
+        .countdown-card.passed {
+            opacity: 0.6;
+            border-left-color: #adb5bd;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+        }
+        
+        .date-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .target-date {
+            font-weight: bold;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .days-left {
+            background-color: var(--tg-theme-accent-text-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+        }
+        
+        .price-targets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .price-target {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .target-label {
+            font-size: 0.7em;
+            color: var(--tg-theme-hint-color, #666);
+            margin-bottom: 4px;
+        }
+        
+        .target-price {
+            font-weight: bold;
+            color: var(--tg-theme-accent-text-color, #3390ec);
+            font-size: 0.9em;
+        }
+        
+        .alert-zone {
+            background-color: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9em;
+            display: none;
+        }
+        
+        .alert-zone.active {
+            display: block;
+            animation: alertBlink 1s infinite;
+        }
+        
+        @keyframes alertBlink {
+            0%, 100% { background-color: rgba(255, 193, 7, 0.2); }
+            50% { background-color: rgba(255, 193, 7, 0.4); }
+        }
+        
+        .trading-panel {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .trading-panel h3 {
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #000);
+        }
+        
+        .signal-item {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 4px solid;
+        }
+        
+        .signal-strong { border-left-color: #ff6b6b; }
+        .signal-medium { border-left-color: #ffa726; }
+        .signal-weak { border-left-color: #51cf66; }
+        
+        .accuracy-tracker {
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .telegram-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border-top: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .telegram-btn {
+            flex: 1;
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        
+        .telegram-btn:active {
+            opacity: 0.7;
+        }
+        
+        .main-content {
+            padding-bottom: 70px; /* Отступ для нижней панели */
+        }
+        
+        .haptic-feedback {
+            transition: transform 0.1s;
+        }
+        
+        .haptic-feedback:active {
+            transform: scale(0.98);
+        }
+        
+        @media (max-width: 360px) {
+            .current-status {
+                grid-template-columns: 1fr;
+            }
+            
+            .price-targets {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="header">
+                <h1>🎯 Gann Monitor</h1>
+                <h2>EUR/USD прогнозы</h2>
+                <div id="currentTime" style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666); margin-top: 5px;"></div>
+            </div>
+
+            <div class="current-status">
+                <div class="status-card">
+                    <div class="status-value" id="currentPrice">1.1300</div>
+                    <div class="status-label">Текущая цена</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value" id="daysPassed">38</div>
+                    <div class="status-label">Дней от макс.</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value" id="nextAlert">11</div>
+                    <div class="status-label">До цели</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-value" id="accuracy">75%</div>
+                    <div class="status-label">Точность</div>
+                </div>
+            </div>
+
+            <div class="price-input">
+                <label>Обновить цену EUR/USD:</label>
+                <div class="input-group">
+                    <input type="number" id="priceUpdate" step="0.0001" min="1.0000" max="1.3000" placeholder="1.1300">
+                    <button class="btn haptic-feedback" onclick="updateCurrentPrice()">Обновить</button>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn active haptic-feedback" onclick="toggleAlerts()" id="alertsBtn">🔔 Алерты ВКЛ</button>
+                <button class="control-btn haptic-feedback" onclick="toggleVibration()" id="vibrateBtn">📳 Вибрация ВКЛ</button>
+                <button class="control-btn haptic-feedback" onclick="shareResults()">📤 Поделиться</button>
+                <button class="control-btn haptic-feedback" onclick="resetAccuracy()">🔄 Сброс</button>
+            </div>
+
+            <div id="countdownContainer" class="countdown-container"></div>
+
+            <div class="trading-panel">
+                <h3>📈 Активные сигналы</h3>
+                <div id="tradingSignals">
+                    <div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 20px;">
+                        Активных сигналов нет
+                    </div>
+                </div>
+            </div>
+
+            <div class="accuracy-tracker">
+                <h3>🎯 Статистика точности</h3>
+                <div id="accuracyList">
+                    <div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 10px;">
+                        Данные загружаются...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="telegram-actions">
+            <button class="telegram-btn" onclick="sendToChat()">💬 В чат</button>
+            <button class="telegram-btn" onclick="setReminder()">⏰ Напоминание</button>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.ready();
+
+        // Настройка темы
+        function applyTelegramTheme() {
+            const root = document.documentElement;
+            if (tg.colorScheme === 'dark') {
+                root.style.setProperty('--tg-theme-bg-color', '#212121');
+                root.style.setProperty('--tg-theme-text-color', '#ffffff');
+                root.style.setProperty('--tg-theme-secondary-bg-color', '#424242');
+            }
+        }
+
+        // Глобальные переменные
+        let currentPrice = 1.1300;
+        let alertsEnabled = true;
+        let vibrationEnabled = true;
+        let startDate = new Date('2025-04-21');
+        let accuracyData = JSON.parse(localStorage.getItem('gannAccuracy') || '[]');
+
+        // Прогнозы Гана (те же данные)
+        const gannForecasts = [
+            {
+                days: 49,
+                date: new Date('2025-06-09'),
+                targets: { strong: 1.1523, medium: 1.1547, priceSquared: 1.1489 },
+                status: 'upcoming'
+            },
+            {
+                days: 64,
+                date: new Date('2025-06-24'),
+                targets: { strong: 1.1508, medium: 1.1540, priceSquared: 1.1445 },
+                status: 'upcoming'
+            },
+            {
+                days: 81,
+                date: new Date('2025-07-11'),
+                targets: { strong: 1.1491, medium: 1.1532, priceSquared: 1.1398 },
+                status: 'upcoming'
+            },
+            {
+                days: 100,
+                date: new Date('2025-07-30'),
+                targets: { strong: 1.1472, medium: 1.1522, priceSquared: 1.1347 },
+                status: 'upcoming'
+            }
+        ];
+
+        // Функции с тактильной обратной связью
+        function hapticFeedback(type = 'impact') {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred(type);
+            }
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = 
+                now.toLocaleString('ru-RU', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+            const daysPassed = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+            document.getElementById('daysPassed').textContent = daysPassed;
+            
+            const nextForecast = gannForecasts.find(f => f.date > now);
+            if (nextForecast) {
+                const daysLeft = Math.ceil((nextForecast.date - now) / (1000 * 60 * 60 * 24));
+                document.getElementById('nextAlert').textContent = daysLeft;
+            }
+        }
+
+        function updateCurrentPrice() {
+            hapticFeedback('light');
+            const newPrice = parseFloat(document.getElementById('priceUpdate').value);
+            
+            if (newPrice && newPrice > 1.0000 && newPrice < 1.3000) {
+                currentPrice = newPrice;
+                document.getElementById('currentPrice').textContent = newPrice.toFixed(4);
+                document.getElementById('priceUpdate').value = '';
+                
+                localStorage.setItem('currentPrice', newPrice.toString());
+                
+                checkPriceAlerts();
+                updateTradingSignals();
+                renderCountdowns();
+                
+                // Уведомление через Telegram
+                tg.showAlert(`Цена обновлена: ${newPrice.toFixed(4)}`);
+            } else {
+                tg.showAlert('Введите корректную цену от 1.0000 до 1.3000');
+            }
+        }
+
+        function checkPriceAlerts() {
+            const now = new Date();
+            
+            gannForecasts.forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntil <= 3 && daysUntil >= -1) {
+                    const tolerance = 0.0020;
+                    
+                    Object.entries(forecast.targets).forEach(([type, target]) => {
+                        if (Math.abs(currentPrice - target) <= tolerance) {
+                            if (alertsEnabled) {
+                                tg.showAlert(`🎯 GANN ALERT!\nЦена ${currentPrice.toFixed(4)} близко к цели ${target.toFixed(4)}\nТип: ${type}`);
+                            }
+                            
+                            if (vibrationEnabled) {
+                                hapticFeedback('heavy');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function renderCountdowns() {
+            const container = document.getElementById('countdownContainer');
+            const now = new Date();
+            
+            container.innerHTML = '';
+            
+            gannForecasts.forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - now) / (1000 * 60 * 60 * 24));
+                
+                let cardClass = 'countdown-card ';
+                if (daysUntil <= 0) cardClass += 'passed';
+                else if (daysUntil <= 3) cardClass += 'active';
+                else cardClass += 'upcoming';
+                
+                const card = document.createElement('div');
+                card.className = cardClass;
+                
+                const targets = forecast.targets;
+                const distances = {
+                    strong: Math.abs(currentPrice - targets.strong),
+                    medium: Math.abs(currentPrice - targets.medium),
+                    priceSquared: Math.abs(currentPrice - targets.priceSquared)
+                };
+                const closestTarget = Object.keys(distances).reduce((a, b) => 
+                    distances[a] < distances[b] ? a : b);
+                
+                card.innerHTML = `
+                    <div class="date-header">
+                        <div class="target-date">${forecast.date.toLocaleDateString('ru-RU')}</div>
+                        <div class="days-left">${daysUntil > 0 ? `${daysUntil}д` : 'Прошло'}</div>
+                    </div>
+                    
+                    <div class="price-targets">
+                        <div class="price-target" style="${closestTarget === 'strong' ? 'border-color: var(--tg-theme-accent-text-color, #3390ec); border-width: 2px;' : ''}">
+                            <div class="target-label">Сильная</div>
+                            <div class="target-price">${targets.strong.toFixed(4)}</div>
+                        </div>
+                        <div class="price-target" style="${closestTarget === 'medium' ? 'border-color: var(--tg-theme-accent-text-color, #3390ec); border-width: 2px;' : ''}">
+                            <div class="target-label">Средняя</div>
+                            <div class="target-price">${targets.medium.toFixed(4)}</div>
+                        </div>
+                        <div class="price-target" style="${closestTarget === 'priceSquared' ? 'border-color: var(--tg-theme-accent-text-color, #3390ec); border-width: 2px;' : ''}">
+                            <div class="target-label">Price²</div>
+                            <div class="target-price">${targets.priceSquared.toFixed(4)}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-zone ${daysUntil <= 3 && daysUntil >= -1 ? 'active' : ''}">
+                        🚨 ВНИМАНИЕ! Цель близко!
+                    </div>
+                    
+                    <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666); margin-top: 8px; text-align: center;">
+                        Ближайшая: ${targets[closestTarget].toFixed(4)} (${(distances[closestTarget] * 10000).toFixed(0)} пип.)
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function updateTradingSignals() {
+            const container = document.getElementById('tradingSignals');
+            const now = new Date();
+            let signals = [];
+            
+            gannForecasts.forEach(forecast => {
+                const daysUntil = Math.ceil((forecast.date - now) / (1000 * 60 * 60 * 24));
+                
+                if (daysUntil <= 7 && daysUntil >= -2) {
+                    const tolerance = 0.0030;
+                    
+                    Object.entries(forecast.targets).forEach(([type, target]) => {
+                        const distance = Math.abs(currentPrice - target);
+                        
+                        if (distance <= tolerance) {
+                            const strength = distance <= 0.0010 ? 'strong' : 
+                                           distance <= 0.0020 ? 'medium' : 'weak';
+                            const direction = currentPrice > target ? 'SELL' : 'BUY';
+                            
+                            signals.push({
+                                date: forecast.date.toLocaleDateString('ru-RU'),
+                                direction,
+                                target: target.toFixed(4),
+                                strength,
+                                distance: (distance * 10000).toFixed(0),
+                                type
+                            });
+                        }
+                    });
+                }
+            });
+            
+            if (signals.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 20px;">Активных сигналов нет</div>';
+                return;
+            }
+            
+            container.innerHTML = signals.map(signal => `
+                <div class="signal-item signal-${signal.strength}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <strong>${signal.direction}</strong>
+                        <span style="font-size: 0.9em;">${signal.target}</span>
+                    </div>
+                    <div style="font-size: 0.8em; color: var(--tg-theme-hint-color, #666);">
+                        ${signal.date} • ${signal.distance} пип. • ${signal.type}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAlerts() {
+            hapticFeedback('light');
+            alertsEnabled = !alertsEnabled;
+            const btn = document.getElementById('alertsBtn');
+            btn.textContent = alertsEnabled ? '🔔 Алерты ВКЛ' : '🔔 Алерты ВЫКЛ';
+            btn.classList.toggle('active', alertsEnabled);
+        }
+
+        function toggleVibration() {
+            hapticFeedback('light');
+            vibrationEnabled = !vibrationEnabled;
+            const btn = document.getElementById('vibrateBtn');
+            btn.textContent = vibrationEnabled ? '📳 Вибрация ВКЛ' : '📳 Вибрация ВЫКЛ';
+            btn.classList.toggle('active', vibrationEnabled);
+        }
+
+        function shareResults() {
+            hapticFeedback('medium');
+            const nextForecast = gannForecasts.find(f => f.date > new Date());
+            if (nextForecast) {
+                const message = `🎯 Gann Analysis EUR/USD
+Текущая цена: ${currentPrice.toFixed(4)}
+Следующая цель: ${nextForecast.date.toLocaleDateString('ru-RU')}
+Уровни: ${Object.values(nextForecast.targets).map(t => t.toFixed(4)).join(' | ')}`;
+                
+                tg.switchInlineQuery(message);
+            }
+        }
+
+        function sendToChat() {
+            hapticFeedback('medium');
+            const message = `📊 Gann Monitor Update
+EUR/USD: ${currentPrice.toFixed(4)}
+Статус: Мониторинг активен
+Следующая проверка: ${gannForecasts.find(f => f.date > new Date())?.date.toLocaleDateString('ru-RU') || 'TBD'}`;
+            
+            tg.sendData(JSON.stringify({
+                action: 'share_update',
+                message: message,
+                price: currentPrice,
+                timestamp: new Date().toISOString()
+            }));
+        }
+
+        function setReminder() {
+            hapticFeedback('medium');
+            const nextForecast = gannForecasts.find(f => f.date > new Date());
+            if (nextForecast) {
+                tg.showAlert(`Напоминание установлено на ${nextForecast.date.toLocaleDateString('ru-RU')}`);
+                
+                // Отправляем данные боту для установки напоминания
+                tg.sendData(JSON.stringify({
+                    action: 'set_reminder',
+                    date: nextForecast.date.toISOString(),
+                    targets: nextForecast.targets
+                }));
+            }
+        }
+
+        function resetAccuracy() {
+            hapticFeedback('light');
+            tg.showConfirm('Сбросить всю статистику точности?', (confirmed) => {
+                if (confirmed) {
+                    accuracyData = [];
+                    localStorage.removeItem('gannAccuracy');
+                    updateAccuracy();
+                    tg.showAlert('Статистика сброшена');
+                }
+            });
+        }
+
+        function updateAccuracy() {
+            if (accuracyData.length === 0) {
+                document.getElementById('accuracy').textContent = 'Н/Д';
+                document.getElementById('accuracyList').innerHTML = 
+                    '<div style="text-align: center; color: var(--tg-theme-hint-color, #666); padding: 10px;">Нет данных</div>';
+                return;
+            }
+            
+            const hits = accuracyData.filter(item => item.result === 'hit').length;
+            const total = accuracyData.filter(item => item.result !== 'pending').length;
+            const accuracy = total > 0 ? Math.round((hits / total) * 100) : 0;
+            
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+            
+            document.getElementById('accuracyList').innerHTML = accuracyData.slice(-5).map(item => `
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);">
+                    <span style="font-size: 0.9em;">${item.date} - ${item.target}</span>
+                    <span style="font-size: 0.9em;">${
+                        item.result === 'hit' ? '✅' : 
+                        item.result === 'miss' ? '❌' : '⏳'
+                    }</span>
+                </div>
+            `).join('');
+        }
+
+        // Инициализация
+        function init() {
+            applyTelegramTheme();
+            
+            const savedPrice = localStorage.getItem('currentPrice');
+            if (savedPrice) {
+                currentPrice = parseFloat(savedPrice);
+                document.getElementById('currentPrice').textContent = currentPrice.toFixed(4);
+            }
+            
+            updateCurrentTime();
+            renderCountdowns();
+            updateTradingSignals();
+            updateAccuracy();
+            
+            // Обновляем каждую минуту
+            setInterval(() => {
+                updateCurrentTime();
+                renderCountdowns();
+                if (alertsEnabled) {
+                    checkPriceAlerts();
+                }
+            }, 60000);
+            
+            setInterval(updateTradingSignals, 30000);
+        }
+
+        // Обработка событий Telegram
+        tg.onEvent('themeChanged', applyTelegramTheme);
+        
+        tg.onEvent('backButtonClicked', () => {
+            tg.close();
+        });
+
+        // Запуск при загрузке
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
