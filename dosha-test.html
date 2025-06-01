@@ -310,6 +310,32 @@
     </style>
 </head>
 <body> 
+
+<script>
+// ШАГ 2: Проверка загрузки страницы и URL параметров
+window.addEventListener('load', function() {
+    console.log('🔄 ШАГ 2: Страница dosha.html загружена');
+    
+    const currentUrl = window.location.href;
+    console.log('🔗 Текущий URL:', currentUrl);
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const userIdFromUrl = urlParams.get('userId');
+    const tgDataFromUrl = urlParams.get('tgWebAppData');
+    
+    console.log('📊 Параметры URL:');
+    console.log('- userId:', userIdFromUrl);
+    console.log('- tgWebAppData:', tgDataFromUrl ? 'есть' : 'нет');
+    
+    if (userIdFromUrl) {
+        alert(`✅ ШАГ 2 УСПЕШНО: User ID найден в URL: ${userIdFromUrl}`);
+    } else {
+        alert('❌ ШАГ 2 ОШИБКА: User ID НЕ найден в URL!');
+    }
+});
+</script>
+
+    
     <div class="background-image"></div>
     <div class="overlay"></div>
     
