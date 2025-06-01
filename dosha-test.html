@@ -310,6 +310,30 @@
     </style>
 </head>
 <body>
+
+<script>
+// Проверка загрузки Telegram WebApp
+window.addEventListener('load', function() {
+    console.log('=== ПРОВЕРКА TELEGRAM WEBAPP ===');
+    console.log('1. window.Telegram существует?', !!window.Telegram);
+    console.log('2. window.Telegram.WebApp существует?', !!window.Telegram?.WebApp);
+    console.log('3. Полный объект Telegram:', window.Telegram);
+    
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        console.log('4. WebApp версия:', tg.version);
+        console.log('5. Платформа:', tg.platform);
+        console.log('6. isReady:', tg.isReady);
+        console.log('7. initDataUnsafe:', tg.initDataUnsafe);
+        
+        alert(`WebApp загружен!\nВерсия: ${tg.version}\nПлатформа: ${tg.platform}\nГотов: ${tg.isReady}`);
+    } else {
+        alert('ОШИБКА: Telegram WebApp НЕ загружен!');
+    }
+});
+</script>
+
+    
     <div class="background-image"></div>
     <div class="overlay"></div>
     
