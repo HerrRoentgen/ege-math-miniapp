@@ -716,62 +716,50 @@
             document.getElementById('kaphaScore').textContent = scores.kapha;
         }
 
-// Сохранение в БД через Telegram WebApp
+// Тестовая отправка данных
 async function saveResultToDatabase() {
-    const result = determineDoshaType();
-    
-    const dataToSave = {
-        type: 'dosha_result',
-        vataScore: scores.vata,
-        pittaScore: scores.pitta,
-        kaphaScore: scores.kapha,
-        dominantDosha: result.dominant,
-        secondaryDosha: result.secondary,
-        doshaType: result.type
-    };
-    
-    console.log('=== ОТЛАДКА ОТПРАВКИ ДАННЫХ ===');
-    console.log('1. Данные для отправки:', dataToSave);
+    console.log('=== ТЕСТ СВЯЗИ С БОТОМ ===');
     
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         
-        console.log('2. WebApp доступен');
-        console.log('3. User ID:', tg.initDataUnsafe?.user?.id);
-        console.log('4. Chat instance:', tg.initDataUnsafe?.chat_instance);
-        console.log('5. Init data:', tg.initData);
+        console.log('WebApp найден');
+        console.log('User ID:', tg.initDataUnsafe?.user?.id);
         
+        // ТЕСТ 1: Простейшие данные
         try {
-            const jsonData = JSON.stringify(dataToSave);
-            console.log('6. JSON строка:', jsonData);
-            console.log('7. Длина JSON:', jsonData.length);
+            const testData = JSON.stringify({test: "hello"});
+            console.log('Отправляем тестовые данные:', testData);
+            tg.sendData(testData);
+            console.log('sendData выполнен');
             
-            // ПРОБУЕМ РАЗНЫЕ СПОСОБЫ ОТПРАВКИ
-            
-            // Способ 1: sendData (основной)
-            console.log('8. Отправляем через sendData...');
-            tg.sendData(jsonData);
-            console.log('9. SendData выполнен без ошибок');
-            
-            // НЕ ЗАКРЫВАЕМ СРАЗУ - ждем ответ
-            alert('Данные отправлены! Ждем ответ бота...');
-            
-            // Закроем только через 10 секунд
-            setTimeout(() => {
-                console.log('10. Закрываем WebApp...');
-                tg.close();
-            }, 10000);
+            alert('Тест 1: sendData выполнен');
             
         } catch (error) {
-            console.error('ОШИБКА sendData:', error);
-            alert('Ошибка отправки: ' + error.message);
+            console.error('Ошибка sendData:', error);
+            alert('Ошибка sendData: ' + error.message);
         }
         
+        // ТЕСТ 2: HapticFeedback (проверка связи)
+        try {
+            tg.HapticFeedback.impactOccurred('medium');
+            console.log('HapticFeedback сработал');
+            alert('Тест 2: Вибрация сработала?');
+        } catch (error) {
+            console.error('Ошибка HapticFeedback:', error);
+        }
+        
+        // НЕ закрываем - ждем ответ
+        setTimeout(() => {
+            alert('Таймаут! Закрываем...');
+            tg.close();
+        }, 15000);
+        
     } else {
-        console.log('ОШИБКА: WebApp недоступен');
-        alert('WebApp недоступен!');
+        alert('WebApp не найден!');
     }
 }
+
 
 
         // Получение ID пользователя из Telegram WebApp
