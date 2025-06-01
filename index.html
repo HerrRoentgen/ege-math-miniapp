@@ -244,7 +244,7 @@
             </div>
 
             <div class="button-group">
-                <a href="./dosha-test.html" class="primary-button">
+                <a href="javascript:goToTest()" class="primary-button">
                     <span class="icon">🔮</span>
                     Определить мою дошу
                 </a>
@@ -257,6 +257,20 @@
     </div>
 
     <script>
+        // Переход к тесту с сохранением WebApp контекста
+        function goToTest() {
+            if (window.Telegram && window.Telegram.WebApp) {
+                // Передаем WebApp данные через URL
+                const tgData = window.Telegram.WebApp.initData || '';
+                const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id || '';
+                window.location.href = `dosha-test.html?tgWebAppData=${encodeURIComponent(tgData)}&userId=${userId}`;
+            } else {
+                // Если не в Telegram - обычный переход
+                window.location.href = 'dosha-test.html';
+            }
+        }
+
+        
         // Симуляция динамических цитат в зависимости от времени
         const quotes = [
             {
