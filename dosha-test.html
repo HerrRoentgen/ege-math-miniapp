@@ -812,6 +812,10 @@
 
         // Инициализация Telegram WebApp
         function initTelegramWebApp() {
+            const currentUrl = window.location.href;
+            console.log('Полный URL:', currentUrl);
+            alert('URL: ' + currentUrl);
+
             // Восстанавливаем WebApp контекст из URL параметров
             const urlParams = new URLSearchParams(window.location.search);
             const tgWebAppData = urlParams.get('tgWebAppData');
