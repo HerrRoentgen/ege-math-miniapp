@@ -259,16 +259,34 @@
     <script>
         // Переход к тесту с сохранением WebApp контекста
         function goToTest() {
+            console.log('🔄 ШАГ 1: Запуск функции goToTest()');
+            alert('🔄 ШАГ 1: Начинаем переход к тесту');
+            
             if (window.Telegram && window.Telegram.WebApp) {
-                // Передаем WebApp данные через URL
                 const tgData = window.Telegram.WebApp.initData || '';
                 const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id || '';
-                window.location.href = `dosha-test.html?tgWebAppData=${encodeURIComponent(tgData)}&userId=${userId}`;
+                
+                console.log('📱 Telegram WebApp найден');
+                console.log('📊 tgData:', tgData);
+                console.log('👤 userId:', userId);
+                
+                if (userId) {
+                    alert(`✅ ШАГ 1 УСПЕШНО: User ID получен: ${userId}`);
+                    const targetUrl = `dosha-test.html?tgWebAppData=${encodeURIComponent(tgData)}&userId=${userId}`;
+                    console.log('🔗 Переходим по URL:', targetUrl);
+                    window.location.href = targetUrl;
+                } else {
+                    alert('❌ ШАГ 1 ОШИБКА: User ID пустой!');
+                    console.error('❌ User ID пустой!');
+                }
             } else {
-                // Если не в Telegram - обычный переход
+                alert('❌ ШАГ 1 ОШИБКА: Telegram WebApp не найден!');
+                console.error('❌ Telegram WebApp не доступен');
+                // Переходим без параметров
                 window.location.href = 'dosha-test.html';
             }
         }
+
 
         
         // Симуляция динамических цитат в зависимости от времени
