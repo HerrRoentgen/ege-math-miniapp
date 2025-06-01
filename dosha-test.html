@@ -716,50 +716,63 @@
             document.getElementById('kaphaScore').textContent = scores.kapha;
         }
 
-        // Сохранение в БД через Telegram WebApp
-        async function saveResultToDatabase() {
-            const result = determineDoshaType();
+// Сохранение в БД через Telegram WebApp
+async function saveResultToDatabase() {
+    const result = determineDoshaType();
+    
+    const dataToSave = {
+        type: 'dosha_result',
+        vataScore: scores.vata,
+        pittaScore: scores.pitta,
+        kaphaScore: scores.kapha,
+        dominantDosha: result.dominant,
+        secondaryDosha: result.secondary,
+        doshaType: result.type
+    };
+    
+    console.log('=== ОТЛАДКА ОТПРАВКИ ДАННЫХ ===');
+    console.log('1. Данные для отправки:', dataToSave);
+    
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        
+        console.log('2. WebApp доступен');
+        console.log('3. User ID:', tg.initDataUnsafe?.user?.id);
+        console.log('4. Chat instance:', tg.initDataUnsafe?.chat_instance);
+        console.log('5. Init data:', tg.initData);
+        
+        try {
+            const jsonData = JSON.stringify(dataToSave);
+            console.log('6. JSON строка:', jsonData);
+            console.log('7. Длина JSON:', jsonData.length);
             
-            const dataToSave = {
-                type: 'dosha_result', // Тип данных для обработчика бота
-                vataScore: scores.vata,
-                pittaScore: scores.pitta,
-                kaphaScore: scores.kapha,
-                dominantDosha: result.dominant,
-                secondaryDosha: result.secondary,
-                doshaType: result.type
-            };
+            // ПРОБУЕМ РАЗНЫЕ СПОСОБЫ ОТПРАВКИ
             
-            console.log('Отправляем данные в бот:', dataToSave);
+            // Способ 1: sendData (основной)
+            console.log('8. Отправляем через sendData...');
+            tg.sendData(jsonData);
+            console.log('9. SendData выполнен без ошибок');
             
-            try {
-                // Проверяем, что мы в Telegram WebApp
-                if (window.Telegram && window.Telegram.WebApp) {
-                    const tg = window.Telegram.WebApp;
-                    
-                    // Отправляем данные в бот через WebApp API
-                    tg.sendData(JSON.stringify(dataToSave));
-                    
-                    console.log('Данные успешно отправлены в бот');
-                    
-                    // Закрываем WebApp через короткое время
-                    setTimeout(() => {
-                        tg.close();
-                    }, 2000);
-                    
-                } else {
-                    // Если не в Telegram - сохраняем локально для тестирования
-                    console.log('Не в Telegram WebApp, сохраняем локально');
-                    localStorage.setItem('doshaResult', JSON.stringify(dataToSave));
-                }
-                
-            } catch (error) {
-                console.error('Ошибка при отправке данных:', error);
-                
-                // Fallback - сохраняем локально
-                localStorage.setItem('doshaResult', JSON.stringify(dataToSave));
-            }
+            // НЕ ЗАКРЫВАЕМ СРАЗУ - ждем ответ
+            alert('Данные отправлены! Ждем ответ бота...');
+            
+            // Закроем только через 10 секунд
+            setTimeout(() => {
+                console.log('10. Закрываем WebApp...');
+                tg.close();
+            }, 10000);
+            
+        } catch (error) {
+            console.error('ОШИБКА sendData:', error);
+            alert('Ошибка отправки: ' + error.message);
         }
+        
+    } else {
+        console.log('ОШИБКА: WebApp недоступен');
+        alert('WebApp недоступен!');
+    }
+}
+
 
         // Получение ID пользователя из Telegram WebApp
         function getUserId() {
