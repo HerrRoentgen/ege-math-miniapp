@@ -812,14 +812,25 @@
 
         // Инициализация Telegram WebApp
         function initTelegramWebApp() {
+            // Восстанавливаем WebApp контекст из URL параметров
+            const urlParams = new URLSearchParams(window.location.search);
+            const tgWebAppData = urlParams.get('tgWebAppData');
+            const userId = urlParams.get('userId');
+            
+            console.log('URL параметры:', {
+                tgWebAppData: tgWebAppData ? 'есть' : 'нет',
+                userId: userId
+            });
+            
             if (window.Telegram && window.Telegram.WebApp) {
                 const tg = window.Telegram.WebApp;
                 
-                // Инициализируем WebApp
+                console.log('WebApp объект найден');
+                console.log('Готовность WebApp:', tg.isReady);
+                
                 tg.ready();
                 tg.expand();
                 
-                // Применяем тему Telegram
                 if (tg.themeParams) {
                     document.documentElement.style.setProperty('--tg-bg-color', tg.themeParams.bg_color || '#667eea');
                     document.documentElement.style.setProperty('--tg-text-color', tg.themeParams.text_color || '#ffffff');
@@ -827,10 +838,14 @@
                 
                 console.log('Telegram WebApp инициализирован');
                 console.log('User ID:', tg.initDataUnsafe?.user?.id);
+                
+                alert(`WebApp работает! User ID: ${tg.initDataUnsafe?.user?.id || 'не определен'}`);
             } else {
-                console.log('Приложение открыто не в Telegram');
+                console.log('WebApp НЕ найден!');
+                alert('WebApp НЕ работает! Данные не будут сохранены.');
             }
         }
+
 
         // Инициализация при загрузке
         document.addEventListener('DOMContentLoaded', function() {
