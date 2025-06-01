@@ -309,31 +309,7 @@
         }
     </style>
 </head>
-<body>
-
-<script>
-// Проверка загрузки Telegram WebApp
-window.addEventListener('load', function() {
-    console.log('=== ПРОВЕРКА TELEGRAM WEBAPP ===');
-    console.log('1. window.Telegram существует?', !!window.Telegram);
-    console.log('2. window.Telegram.WebApp существует?', !!window.Telegram?.WebApp);
-    console.log('3. Полный объект Telegram:', window.Telegram);
-    
-    if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        console.log('4. WebApp версия:', tg.version);
-        console.log('5. Платформа:', tg.platform);
-        console.log('6. isReady:', tg.isReady);
-        console.log('7. initDataUnsafe:', tg.initDataUnsafe);
-        
-        alert(`WebApp загружен!\nВерсия: ${tg.version}\nПлатформа: ${tg.platform}\nГотов: ${tg.isReady}`);
-    } else {
-        alert('ОШИБКА: Telegram WebApp НЕ загружен!');
-    }
-});
-</script>
-
-    
+<body> 
     <div class="background-image"></div>
     <div class="overlay"></div>
     
@@ -754,39 +730,52 @@ async function saveResultToDatabase() {
         doshaType: result.type
     };
     
-    console.log('Отправляем данные в бот:', dataToSave);
+    console.log('=== ОТЛАДКА ОТПРАВКИ ===');
+    console.log('1. Данные для отправки:', dataToSave);
     
     if (window.Telegram && window.Telegram.WebApp) {
         const tg = window.Telegram.WebApp;
         
+        console.log('2. WebApp найден');
+        console.log('3. isReady:', tg.isReady);
+        console.log('4. User ID:', tg.initDataUnsafe?.user?.id);
+        console.log('5. InitData:', tg.initData);
+        console.log('6. InitDataUnsafe полностью:', tg.initDataUnsafe);
+        
+        // КРИТИЧЕСКАЯ ПРОВЕРКА
+        if (!tg.initDataUnsafe?.user?.id) {
+            console.error('❌ НЕТ USER ID! SendData не сработает!');
+            alert('❌ Ошибка: Не удалось получить ID пользователя!\nПереоткройте тест через команду /dosha');
+            return;
+        }
+        
         try {
-            console.log('WebApp isReady:', tg.isReady);
-            console.log('User ID:', tg.initDataUnsafe?.user?.id);
-            
             const jsonData = JSON.stringify(dataToSave);
-            console.log('Отправляем JSON:', jsonData);
+            console.log('7. JSON для отправки:', jsonData);
             
             // Отправляем данные
             tg.sendData(jsonData);
-            console.log('sendData выполнен');
+            console.log('8. ✅ sendData выполнен без ошибок');
             
-            alert('Данные отправлены! Ждем ответ...');
+            alert('✅ Данные отправлены! User ID: ' + tg.initDataUnsafe.user.id);
             
-            // Закрываем через 5 секунд
+            // Закрываем через 8 секунд
             setTimeout(() => {
+                console.log('9. Закрываем WebApp');
                 tg.close();
-            }, 5000);
+            }, 8000);
             
         } catch (error) {
-            console.error('Ошибка при отправке:', error);
-            alert('Ошибка: ' + error.message);
+            console.error('❌ ОШИБКА sendData:', error);
+            alert('❌ Ошибка отправки: ' + error.message);
         }
         
     } else {
-        console.log('WebApp недоступен');
-        alert('WebApp недоступен');
+        console.error('❌ WebApp недоступен');
+        alert('❌ WebApp недоступен');
     }
 }
+
 
 
 
