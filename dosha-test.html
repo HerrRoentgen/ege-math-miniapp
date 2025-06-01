@@ -742,6 +742,28 @@ window.addEventListener('load', function() {
 
 // Тестовая отправка данных
 async function saveResultToDatabase() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        
+        console.log('Проверяем готовность перед отправкой...');
+        console.log('isReady:', tg.isReady);
+        
+        if (!tg.isReady) {
+            alert('WebApp не готов! Ждем...');
+            
+            // Ждем готовности
+            setTimeout(() => {
+                if (tg.isReady) {
+                    console.log('WebApp стал готов, отправляем данные...');
+                    // Продолжаем отправку...
+                } else {
+                    alert('WebApp не готов через таймаут');
+                }
+            }, 500);
+            return;
+        }
+
+    
     console.log('=== ТЕСТ СВЯЗИ С БОТОМ ===');
     
     if (window.Telegram && window.Telegram.WebApp) {
@@ -835,45 +857,46 @@ async function saveResultToDatabase() {
             }
         }
 
-        // Инициализация Telegram WebApp
-        function initTelegramWebApp() {
-            const currentUrl = window.location.href;
-            console.log('Полный URL:', currentUrl);
-            alert('URL: ' + currentUrl);
-
-            // Восстанавливаем WebApp контекст из URL параметров
-            const urlParams = new URLSearchParams(window.location.search);
-            const tgWebAppData = urlParams.get('tgWebAppData');
-            const userId = urlParams.get('userId');
+ // Инициализация Telegram WebApp
+function initTelegramWebApp() {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        
+        console.log('WebApp найден, инициализируем...');
+        console.log('До ready() - isReady:', tg.isReady);
+        
+        // ВАЖНО: Сначала готовим WebApp
+        tg.ready();
+        
+        // Проверяем после ready()
+        setTimeout(() => {
+            console.log('После ready() - isReady:', tg.isReady);
+            console.log('User ID:', tg.initDataUnsafe?.user?.id);
+            console.log('Chat ID:', tg.initDataUnsafe?.chat?.id);
             
-            console.log('URL параметры:', {
-                tgWebAppData: tgWebAppData ? 'есть' : 'нет',
-                userId: userId
-            });
-            
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tg = window.Telegram.WebApp;
-                
-                console.log('WebApp объект найден');
-                console.log('Готовность WebApp:', tg.isReady);
-                
-                tg.ready();
+            if (tg.isReady) {
+                console.log('✅ WebApp готов к работе!');
                 tg.expand();
                 
+                // Применяем тему
                 if (tg.themeParams) {
                     document.documentElement.style.setProperty('--tg-bg-color', tg.themeParams.bg_color || '#667eea');
                     document.documentElement.style.setProperty('--tg-text-color', tg.themeParams.text_color || '#ffffff');
                 }
                 
-                console.log('Telegram WebApp инициализирован');
-                console.log('User ID:', tg.initDataUnsafe?.user?.id);
-                
-                alert(`WebApp работает! User ID: ${tg.initDataUnsafe?.user?.id || 'не определен'}`);
+                alert(`✅ WebApp готов!\nUser ID: ${tg.initDataUnsafe?.user?.id || 'не определен'}`);
             } else {
-                console.log('WebApp НЕ найден!');
-                alert('WebApp НЕ работает! Данные не будут сохранены.');
+                console.log('❌ WebApp не готов');
+                alert('❌ WebApp не готов');
             }
-        }
+        }, 100); // Небольшая задержка
+        
+    } else {
+        console.log('WebApp НЕ найден!');
+        alert('WebApp НЕ найден!');
+    }
+}
+
 
 
         // Инициализация при загрузке
